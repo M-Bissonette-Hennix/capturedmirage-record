@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema",
+    "gameId",
+    "createdAt",
+    "updatedAt",
+    "recordRevision",
+    "sourceRevision",
+    "observationRequestIds",
+    "status",
+    "beamWidth",
+    "paths",
+    "ambiguities",
+    "selectedPath",
+    "algorithm"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "schema": {
+      "const": "record-reconstruction-run/1"
+    },
+    "gameId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recordRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observationRequestIds": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 96,
+        "pattern": "^[A-Za-z0-9._-]+$"
+      }
+    },
+    "status": {
+      "enum": [
+        "COMPLETE",
+        "AMBIGUOUS",
+        "FAILED",
+        "STALE"
+      ]
+    },
+    "beamWidth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "paths": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rank",
+          "score",
+          "moves",
+          "requiresReview"
+        ],
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "score": {
+            "type": "number"
+          },
+          "moves": {
+            "type": "array",
+            "maxItems": 2000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ply",
+                "san",
+                "uci",
+                "beforeFen",
+                "afterFen",
+                "provenance",
+                "sourceRefs",
+                "observationRefs",
+                "support",
+                "alternatives"
+              ],
+              "properties": {
+                "ply": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "san": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                "uci": {
+                  "type": "string",
+                  "minLength": 4,
+                  "maxLength": 8
+                },
+                "beforeFen": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "afterFen": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "provenance": {
+                  "enum": [
+                    "SHEET_DIRECT",
+                    "SHEET_CONSTRAINED",
+                    "USER_CORRECTED",
+                    "USER_ENTERED",
+                    "INFERRED_BRIDGE",
+                    "UNRESOLVED"
+                  ]
+                },
+                "sourceRefs": {
+                  "type": "array",
+                  "maxItems": 8,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 96,
+                    "pattern": "^[A-Za-z0-9._-]+$"
+                  }
+                },
+                "observationRefs": {
+                  "type": "array",
+                  "maxItems": 8,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 13,
+                    "maxLength": 200,
+                    "pattern": "^[A-Za-z0-9._-]{8,96}:[A-Za-z0-9._-]{4,96}$"
+                  }
+                },
+                "support": {
+                  "enum": [
+                    "DIRECT",
+                    "CONSTRAINED",
+                    "BRIDGE"
+                  ]
+                },
+                "alternatives": {
+                  "type": "array",
+                  "maxItems": 16,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "requiresReview": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "ambiguities": {
+      "type": "array",
+      "maxItems": 2000
+    },
+    "selectedPath": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "algorithm": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    }
+  }
+}

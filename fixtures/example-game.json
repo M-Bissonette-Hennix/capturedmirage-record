@@ -1,0 +1,5 @@
+{
+  "description": "Deterministic smoke fixture; no source image bundled.",
+  "metadata": {"event":"Fixture","site":"Local","date":"2026.09.09","round":"1","white":"White","black":"Black","result":"*"},
+  "sans": ["e4","e5","Nf3","Nc6","Bb5"]
+}

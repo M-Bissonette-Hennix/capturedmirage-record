@@ -1,0 +1,166 @@
+{
+  "schema": "record-recognition-envelope/3",
+  "requestId": "fixture-request-0001",
+  "gameId": "fixture-game-0001",
+  "pageId": "fixture-page-0001",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "derivedAsset": {
+    "id": "fixture-derived-0001",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "mime": "image/jpeg",
+    "width": 1600,
+    "height": 2200,
+    "preprocessorVersion": "record-preprocess/3"
+  },
+  "provider": {
+    "adapter": "fixture-local",
+    "model": "deterministic-fixture",
+    "modelVersion": "3",
+    "promptRevision": "fixture-3"
+  },
+  "layout": {
+    "coordinateSpace": "normalized-derived-image",
+    "documentQuad": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "rowsDetected": 4
+  },
+  "cells": [
+    {
+      "id": "fixture-cell-0001",
+      "moveNumber": 1,
+      "side": "white",
+      "crop": {
+        "x": 0.08,
+        "y": 0.3,
+        "w": 0.18,
+        "h": 0.06
+      },
+      "observations": [
+        {
+          "text": "e4",
+          "rank": 1
+        },
+        {
+          "text": "c4",
+          "rank": 2
+        }
+      ],
+      "unreadable": false
+    },
+    {
+      "id": "fixture-cell-0002",
+      "moveNumber": 1,
+      "side": "black",
+      "crop": {
+        "x": 0.55,
+        "y": 0.3,
+        "w": 0.18,
+        "h": 0.06
+      },
+      "observations": [
+        {
+          "text": "e5",
+          "rank": 1
+        },
+        {
+          "text": "c5",
+          "rank": 2
+        }
+      ],
+      "unreadable": false
+    },
+    {
+      "id": "fixture-cell-0003",
+      "moveNumber": 2,
+      "side": "white",
+      "crop": {
+        "x": 0.08,
+        "y": 0.37,
+        "w": 0.18,
+        "h": 0.06
+      },
+      "observations": [
+        {
+          "text": "Nf3",
+          "rank": 1
+        },
+        {
+          "text": "Nc3",
+          "rank": 2
+        }
+      ],
+      "unreadable": false
+    },
+    {
+      "id": "fixture-cell-0004",
+      "moveNumber": 2,
+      "side": "black",
+      "crop": {
+        "x": 0.55,
+        "y": 0.37,
+        "w": 0.18,
+        "h": 0.06
+      },
+      "observations": [
+        {
+          "text": "Nc6",
+          "rank": 1
+        },
+        {
+          "text": "Nf6",
+          "rank": 2
+        }
+      ],
+      "unreadable": false
+    }
+  ],
+  "metadataObservations": [
+    {
+      "field": "event",
+      "text": "Fixture Event",
+      "crop": {
+        "x": 0.12,
+        "y": 0.05,
+        "w": 0.3,
+        "h": 0.05
+      }
+    },
+    {
+      "field": "round",
+      "text": "1",
+      "crop": {
+        "x": 0.65,
+        "y": 0.05,
+        "w": 0.1,
+        "h": 0.05
+      }
+    }
+  ],
+  "warnings": [
+    "Fixture output only. No historical authority is implied."
+  ],
+  "gateway": {
+    "build": "fixture-local/3",
+    "keyId": "UNSIGNED_FIXTURE",
+    "signedAt": "2026-09-09T00:00:00.000Z"
+  },
+  "signature": "",
+  "runSequence": 1,
+  "supersedesRequestId": null
+}

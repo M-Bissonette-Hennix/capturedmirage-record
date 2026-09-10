@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recognition-envelope.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "requestId",
+    "gameId",
+    "pageId",
+    "sourceSha256",
+    "runSequence",
+    "supersedesRequestId",
+    "derivedAsset",
+    "provider",
+    "layout",
+    "cells",
+    "metadataObservations",
+    "warnings",
+    "gateway",
+    "signature"
+  ],
+  "properties": {
+    "schema": {
+      "const": "record-recognition-envelope/3"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "gameId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "pageId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "runSequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "supersedesRequestId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9._-]+$"
+        }
+      ]
+    },
+    "derivedAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sha256",
+        "mime",
+        "width",
+        "height",
+        "preprocessorVersion"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mime": {
+          "const": "image/jpeg"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "preprocessorVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter",
+        "model",
+        "modelVersion",
+        "promptRevision"
+      ],
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "modelVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "promptRevision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinateSpace",
+        "documentQuad",
+        "rowsDetected"
+      ],
+      "properties": {
+        "coordinateSpace": {
+          "const": "normalized-derived-image"
+        },
+        "documentQuad": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "rowsDetected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        }
+      }
+    },
+    "cells": {
+      "type": "array",
+      "maxItems": 240,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "moveNumber",
+          "side",
+          "crop",
+          "observations",
+          "unreadable"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 96,
+            "pattern": "^[A-Za-z0-9._-]+$"
+          },
+          "moveNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "side": {
+            "enum": [
+              "white",
+              "black"
+            ]
+          },
+          "crop": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "w",
+              "h"
+            ],
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "w": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              },
+              "h": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          },
+          "observations": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "rank"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "rank": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 8
+                },
+                "providerScore": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "unreadable": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "metadataObservations": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "text"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "crop": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "w",
+              "h"
+            ],
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "w": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              },
+              "h": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "maxLength": 300
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build",
+        "keyId",
+        "signedAt"
+      ],
+      "properties": {
+        "build": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "keyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "signedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "signature": {
+      "type": "string",
+      "maxLength": 2048
+    }
+  }
+}

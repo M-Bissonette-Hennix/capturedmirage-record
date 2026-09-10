@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {validateRecognitionEnvelope} from '../src/validators.js';const base=JSON.parse(fs.readFileSync('fixtures/recognition/clean-fixture-001/envelope.json','utf8'));
+test('valid fixture recognition envelope passes',()=>assert.equal(validateRecognitionEnvelope(structuredClone(base)),true));
+test('provider historical authority is rejected',()=>{const x=structuredClone(base);x.correctMove='e4';assert.throws(()=>validateRecognitionEnvelope(x),/unknown field|correctMove/i);});
+test('hostile crop coordinates and huge candidate sets reject',()=>{const x=structuredClone(base);x.cells[0].crop.x=-1;assert.throws(()=>validateRecognitionEnvelope(x));const y=structuredClone(base);y.cells[0].observations=Array.from({length:100},(_,i)=>({text:'x',rank:i+1}));assert.throws(()=>validateRecognitionEnvelope(y));});
+test('embedded markup remains data and passes only as bounded text',()=>{const x=structuredClone(base);x.cells[0].observations[0].text='"><img src=x onerror=alert(1)>';assert.equal(validateRecognitionEnvelope(x),true);});

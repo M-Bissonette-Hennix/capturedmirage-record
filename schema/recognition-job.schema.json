@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema",
+    "gameId",
+    "pageId",
+    "sourceSha256",
+    "derivedSha256",
+    "status",
+    "attempt",
+    "idempotencyKey",
+    "providerProfile",
+    "createdAt",
+    "updatedAt",
+    "lastError",
+    "nextAttemptAt",
+    "recordRevision",
+    "sourceRevision",
+    "runSequence",
+    "runKind",
+    "supersedesRequestId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "schema": {
+      "const": "record-recognition-job/2"
+    },
+    "gameId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "pageId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "derivedSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "UPLOADING",
+        "PROCESSING",
+        "COMPLETE",
+        "FAILED_RETRYABLE",
+        "FAILED_TERMINAL",
+        "CANCELLED",
+        "SUPERSEDED"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "providerProfile": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastError": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    },
+    "nextAttemptAt": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
+    "recordRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "runSequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "runKind": {
+      "enum": [
+        "INITIAL",
+        "RERUN"
+      ]
+    },
+    "supersedesRequestId": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z0-9._-]+$"
+        }
+      ]
+    }
+  }
+}

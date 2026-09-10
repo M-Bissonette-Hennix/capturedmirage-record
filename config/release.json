@@ -1,0 +1,15 @@
+{
+  "product": "RECORD",
+  "version": "0.3.0",
+  "release": "RECONSTRUCTION / INTEGRITY",
+  "releasedAt": "2026-09-09T16:10:00.000Z",
+  "sourceRelease": {
+    "name": "RECORD-0.2.0-VISION-INTEGRITY(2).zip",
+    "sha256": "c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c"
+  },
+  "hostileAudit": {
+    "name": "RECORD_v0.2.0_hostile_audit.txt",
+    "sha256": "23f31eea522ba68dec312d11580a4c4b91faa0133de38f72ba1fff7ef65f304a"
+  },
+  "canonicalCaptureDmirageLogoSha256": "df4f56b3ca47981e0202e433fe275bf15328ca58177599b3ba62a99cd796c8e6"
+}

@@ -1,0 +1,2348 @@
+# RECORD 0.2.0 — VISION / INTEGRITY
+
+## Hostile Post-Release Forensic Audit
+
+### Adversarial weakness, integrity, security, recovery, recognition, chess-correctness, and deployment assessment
+
+I audited the **actual attached archive**, not the previous release description.
+
+The target was:
+
+`RECORD-0.2.0-VISION-INTEGRITY(1).zip`
+
+Exact SHA-256:
+
+`c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c`
+
+The archive itself is healthy. It contains **132 ZIP entries**, passes ZIP structural verification, and its internal release manifest contains **131 tracked files**. I independently recalculated every tracked file's size and SHA-256: **131/131 match, zero missing, zero unexpected, zero mismatches**. I also reran the supplied deterministic test suite from the extracted archive: **37/37 PASS**.
+
+That is useful because it establishes an important distinction:
+
+> The findings below are **not packaging corruption, incomplete extraction, or stale-release artifacts**. They are weaknesses in the actual sealed 0.2.0 design and implementation.
+
+The release QA receipt is also commendably honest about what remains external: physical iPhone testing, GitHub-hosted Chromium/WebKit execution, deployed dedicated-origin gateway commissioning, and real-provider benchmarking are marked **PENDING EXTERNAL**, not falsely claimed as passes.
+
+My overall judgment, however, is substantially harsher than the 37/37 result suggests:
+
+> **RECORD 0.2.0 is materially stronger than 0.1 and has a serious evidentiary architecture, but it is not yet safe to call evidentiary-grade, tournament-frozen, or “bulletproof.”**
+
+The most serious remaining problems are not cosmetic. Several allow a record to be **certified despite unresolved or missing evidence**, one permits a Capsule verifier to accept a PGN contradicting the certified canonical record, the actual 0.1→0.2 browser-data migration is non-functional, the recognition gateway's registration/idempotency semantics are not strong enough for production, and large export/restore operations remain dangerous on iPhone because they are fundamentally in-memory.
+
+I would treat the next release as a **0.2.1 integrity/security corrective release before beginning 0.3 reconstruction work**.
+
+---
+
+# I. DIRECT ADVERSARIAL PROBES THAT BYPASSED THE 37-PASS SUITE
+
+Before going through the findings individually, these are several probes I executed directly against the delivered source.
+
+Current RECORD allows certification of a zero-move record:
+
+```text
+BLANK_CERT_ALLOWED true
+```
+
+Current RECORD allows certification while the game explicitly carries `needsReview=true`:
+
+```text
+NEEDS_REVIEW_CERT_ALLOWED true
+```
+
+Current RECORD allows certification of a move whose supposed observation reference does not exist:
+
+```text
+DANGLING_OBS_CERT_ALLOWED true
+```
+
+I then created a legitimate certified Capsule, replaced `game.pgn` with a different game, recalculated the file descriptor and Capsule content root so the package remained internally hash-consistent, and submitted it to the shipped `verifyCapsule()`:
+
+```text
+PGN_SEMANTIC_TAMPER_VERIFIED true
+```
+
+I also exercised the actual supplied gateway worker.
+
+The same purportedly “one-time” bootstrap secret allowed registration of the same device ID twice using two different public keys:
+
+```text
+REGISTER_OVERWRITE_STATUSES 200 200
+```
+
+And two recognition requests using the same idempotency key but different request IDs behaved as follows:
+
+```text
+request-00000001 -> 200 request-00000001
+request-00000002 -> 200 request-00000001
+```
+
+That second result directly conflicts with the frontend's response-binding check, which requires the returned request ID to equal the new job's request ID.
+
+These are not theoretical style objections. They are reproducible adversarial behaviors in the sealed release.
+
+---
+
+# II. CRITICAL — THE REAL 0.1 → 0.2 DATABASE MIGRATION DOES NOT MIGRATE THE REAL 0.1 DATABASE
+
+This is the most serious data-continuity defect.
+
+The current 0.2 configuration opens:
+
+```js
+dbName: 'record-chess'
+dbVersion: 2
+```
+
+and `src/db.js` contains:
+
+```js
+if (e.oldVersion === 1) migrateV1(tx);
+```
+
+That superficially looks like a migration.
+
+But the actual previously released 0.1 application used:
+
+```js
+const DB='record-foundation', VER=1;
+```
+
+and object stores:
+
+```text
+games
+pages
+settings
+```
+
+The 0.2 application uses a **different IndexedDB database name**:
+
+```text
+record-chess
+```
+
+and its page store is:
+
+```text
+sourcePages
+```
+
+Therefore a real user's browser does not perform:
+
+```text
+record-foundation v1
+        ↓
+upgrade event
+        ↓
+record-chess v2
+```
+
+It performs:
+
+```text
+existing:
+record-foundation v1
+
+newly opened:
+record-chess v2
+oldVersion = 0
+```
+
+`migrateV1()` never sees the old database.
+
+The user's 0.1 games therefore remain sitting in the orphaned `record-foundation` database while 0.2 starts with an apparently empty `record-chess` database.
+
+This is especially dangerous because the 0.2 documentation advertises schema migration machinery, which could cause the operator to assume an upgrade is safe.
+
+### Required correction
+
+0.2.1 needs an explicit **cross-database migration commissioner**:
+
+```text
+Detect record-foundation
+        ↓
+open read-only
+        ↓
+read games + pages
+        ↓
+validate old schema
+        ↓
+transform game format
+        ↓
+transform pages → sourcePages
+        ↓
+rehash original bytes
+        ↓
+generate v2 source metadata/derivatives
+        ↓
+write atomically into record-chess
+        ↓
+verify imported canonical state
+        ↓
+produce migration receipt
+        ↓
+ONLY THEN offer old-database retirement
+```
+
+Do not automatically delete the old DB.
+
+The release gate must instantiate the **actual shipped 0.1 schema**, populate it with games and photos, boot 0.2, and demonstrate byte-preserving migration.
+
+---
+
+# III. CRITICAL — RECORD CAN CERTIFY A ZERO-MOVE GAME
+
+`buildCertification()` calls:
+
+```js
+computeCanonicalHash()
+```
+
+which calls:
+
+```js
+validateRecord(game)
+```
+
+but neither certification nor record validation establishes that a chess game contains at least one move.
+
+The UI requires a source page, but not a move sequence.
+
+I verified directly that a valid source page plus an otherwise blank record succeeds through `buildCertification()`.
+
+That creates a record which can effectively state:
+
+> The user certifies that this digital game record reflects the game actually played
+
+while containing **no chess moves**.
+
+There are legitimate no-move tournament outcomes—bye, forfeit, no-show—but those must be modeled explicitly. A blank ordinary score-sheet record is not equivalent to a forfeit record.
+
+### Required correction
+
+Certification must require either:
+
+```text
+moves.length >= 1
+```
+
+or a separately modeled record type such as:
+
+```text
+PLAYED_GAME
+FORFEIT
+BYE
+ABANDONED_BEFORE_MOVE
+```
+
+with distinct certification semantics.
+
+A silent zero-move `PLAYED_GAME` must fail closed.
+
+---
+
+# IV. CRITICAL — `needsReview=true` DOES NOT BLOCK CERTIFICATION
+
+The game object contains:
+
+```js
+flags: {
+  needsReview: false,
+  hasFailedJob: false,
+  offlineQueue: false
+}
+```
+
+But `buildCertification()` ignores `needsReview`.
+
+I changed a valid game to:
+
+```js
+game.flags.needsReview = true
+```
+
+and certification still succeeded.
+
+This is not merely a synthetic state.
+
+`replaceMoveAt()` can itself produce:
+
+```js
+game.flags.needsReview = true
+game.workflowState = 'READY_FOR_REVIEW'
+```
+
+when a changed earlier move causes part of the downstream continuation to become illegal.
+
+So the following can happen:
+
+```text
+70-ply game
+↓
+replace move 20
+↓
+later tail fails at move 27
+↓
+RECORD truncates/rebuilds
+↓
+needsReview = true
+↓
+user enters REVIEW
+↓
+certification code remains willing to certify
+```
+
+That can convert a known-incomplete reconstruction into a certified game.
+
+There is an even sharper case in the current UI: **MARK UNREADABLE** sets review uncertainty using a non-evidence-bearing mutation path. A previously certified game can therefore acquire an explicit unresolved review condition without necessarily losing its certification state.
+
+### Required correction
+
+There must be one centralized certification predicate:
+
+```text
+canCertify(record)
+```
+
+which tests all blocking conditions, including:
+
+```text
+moves > 0
+needsReview == false
+no unresolved moves
+no stale failed reconstruction dependency
+source integrity valid
+move ledger valid
+source references valid
+observation references valid
+record revision current
+source revision current
+```
+
+No UI route should be capable of calling `buildCertification()` without this predicate succeeding.
+
+---
+
+# V. CRITICAL — THE UI STILL DISPLAYS “CERTIFIED” FROM STORED STATE RATHER THAN VERIFIED STATE
+
+0.1's hostile audit specifically identified this class of problem.
+
+0.2 now has a genuinely useful:
+
+```js
+verifyCertification()
+```
+
+function.
+
+But ordinary badges still effectively trust:
+
+```js
+game.certificationStatus === 'VALID'
+```
+
+instead of recomputing certification validity.
+
+That means a malformed/restored/corrupted record can retain:
+
+```text
+certificationStatus = VALID
+```
+
+and visually appear certified even if:
+
+* its canonical hash is stale;
+* its source changed;
+* its revision changed;
+* imported data forged the status;
+* certification no longer verifies.
+
+The deeper architectural rule should be:
+
+> **Certification status is not stored truth. Stored certification is only a claim awaiting verification.**
+
+### Required correction
+
+UI states should distinguish:
+
+```text
+CERTIFIED — VERIFIED
+CERTIFICATION INVALID
+CERTIFICATION STALE
+CERTIFICATION UNVERIFIABLE
+UNCERTIFIED
+```
+
+and `CERTIFIED` should only be rendered after `verifyCertification()` has completed successfully against current data.
+
+A cached verification result is acceptable if it is keyed to:
+
+```text
+game revision
+source revision
+canonical hash
+```
+
+but a raw enum is not.
+
+---
+
+# VI. CRITICAL — OBSERVATION REFERENCES ARE NOT PART OF CERTIFICATION REFERENTIAL INTEGRITY
+
+A move now contains:
+
+```js
+sourceRefs: [...]
+observationRefs: [...]
+```
+
+This is good architecture.
+
+But certification only checks that source refs exist.
+
+It does not check that an observation ref exists.
+
+I successfully certified:
+
+```text
+move 1
+SAN: e4
+provenance: SHEET_DIRECT
+sourceRefs: [valid source page]
+observationRefs: ["MISSINGOBS1:CELL1"]
+```
+
+with **no such recognition observation or cell anywhere in the database**.
+
+This is a serious provenance defect.
+
+The canonical record hashes the string:
+
+```text
+MISSINGOBS1:CELL1
+```
+
+but hashing a false pointer does not make the pointer true.
+
+### Worse implications
+
+The software currently does not certify that:
+
+```text
+request ID exists
+cell ID exists inside that request
+observation belongs to this game
+observation belongs to this source page
+cell move number matches this ply
+cell side matches this ply
+observation derivative matches current derivative
+```
+
+Therefore observation provenance is partly decorative rather than enforced.
+
+### Required correction
+
+Certification needs the relevant observation set as an input:
+
+```js
+buildCertification(game, pages, observations)
+```
+
+Every `observationRef` should resolve exactly once to an immutable:
+
+```text
+requestId
+cellId
+pageId
+sourceSha256
+derivedSha256
+```
+
+binding.
+
+Referenced observation descriptors—or their cryptographic hashes—should then be included in the canonical certification record.
+
+---
+
+# VII. CRITICAL — CAPSULE VERIFICATION DOES NOT VERIFY THAT `game.pgn` REPRESENTS `record.json`
+
+This is one of the strongest findings in the audit.
+
+The Capsule contains both:
+
+```text
+game.pgn
+record.json
+```
+
+The verifier cryptographically checks that both files are present and match their manifest descriptors.
+
+It checks the canonical chess record inside `record.json`.
+
+It **does not compare the PGN's chess meaning to the canonical record**.
+
+I demonstrated this by taking a valid Capsule whose certified game began:
+
+```text
+1. e4
+```
+
+and replacing `game.pgn` with:
+
+```text
+[Event "FAKE"]
+
+1. d4 *
+```
+
+I then recalculated the PGN descriptor and Capsule root, representing an attacker capable of rebuilding a self-consistent unsigned Capsule.
+
+The supplied verifier reported:
+
+```text
+valid: true
+```
+
+That means a consumer can receive a Capsule with:
+
+```text
+record.json → e4
+game.pgn    → d4
+```
+
+and RECORD's validator calls the package valid.
+
+This matters directly for CAPTUREDMIRAGE, because a downstream importer might reasonably consume `game.pgn`.
+
+### Required correction
+
+`verifyCapsule()` must derive the expected PGN from canonical `record.game` and compare it.
+
+At minimum:
+
+```js
+expected = gamePgn(record.game)
+actual   = decoded game.pgn
+
+expected === canonicalized(actual)
+```
+
+Better still:
+
+1. parse supplied PGN;
+2. replay its main line;
+3. compare every ply;
+4. compare mandatory metadata;
+5. compare start FEN/SetUp semantics;
+6. verify result;
+7. optionally require canonical serialized output byte equality.
+
+A Capsule is not valid if its interoperability representation contradicts its evidentiary representation.
+
+---
+
+# VIII. CRITICAL — THE “ONE-TIME” DEVICE BOOTSTRAP SECRET IS NOT ONE-TIME
+
+The gateway documentation calls:
+
+```text
+RECORD_BOOTSTRAP_SECRET
+```
+
+a:
+
+> one-time device registration secret
+
+The worker does not enforce one-time semantics.
+
+If the bootstrap secret matches, it simply does:
+
+```js
+RECORD_DEVICES.put(deviceId, ...)
+```
+
+I registered the same device ID first with one P-256 public key and then with a completely different public key.
+
+Both registrations returned:
+
+```text
+HTTP 200
+```
+
+The second silently replaced the first.
+
+Therefore anyone who obtains the bootstrap secret can potentially overwrite a registered device identity.
+
+### Required correction
+
+Bootstrap must be an actual consumable registration capability.
+
+For example:
+
+```text
+bootstrap token ID
++
+high-entropy secret
++
+expiration
++
+unused state
+```
+
+Registration should atomically transition:
+
+```text
+UNUSED → CONSUMED
+```
+
+and never succeed twice.
+
+An existing device ID should fail registration unless a distinct authenticated **device-key rotation/recovery** protocol is used.
+
+---
+
+# IX. CRITICAL — BACKUP IMPORT CAN OVERWRITE DEPENDENT OBJECTS BELONGING TO OTHER LOCAL GAMES
+
+Restore conflict handling protects primarily at the **game ID** level.
+
+After deciding that an incoming game may be imported, code performs `put()` operations for:
+
+```text
+sourcePages
+derivedAssets
+recognitionJobs
+recognitionObservations
+auditEvents
+```
+
+using the IDs supplied in the backup.
+
+There is no comprehensive cross-store preflight that ensures an incoming dependent object ID does not already belong to another local game.
+
+Accidental UUID collision is astronomically unlikely.
+
+Hostile archive collision is not.
+
+A crafted backup can intentionally choose the ID of an existing local page or asset and cause a `put()` replacement.
+
+That violates the expected meaning of:
+
+```text
+KEEP_LOCAL
+```
+
+because local dependent evidence can still be overwritten.
+
+### Required correction
+
+Before writing one byte, restore must build a conflict map across **every persistent store**.
+
+Any incoming object ID already owned by another local entity must produce a hard conflict.
+
+`IMPORT_AS_COPY` must remap all identifiers consistently before database writes.
+
+---
+
+# X. HIGH — RECOGNITION “RE-RUN” IS LOGICALLY INCOMPATIBLE WITH THE CURRENT IDEMPOTENCY CONTRACT
+
+The client creates a new job UUID every time recognition is queued:
+
+```text
+request ID = new UUID
+```
+
+But the idempotency key is derived from:
+
+```text
+source SHA
+derived SHA
+provider profile
+preprocessor version
+page ID
+```
+
+and therefore stays identical for an unchanged page.
+
+Gateway behavior is:
+
+```js
+if (idempotency cache hit)
+    return prior envelope
+```
+
+So a deliberate new run behaves as:
+
+```text
+new client requestId
+same idempotency key
+↓
+gateway returns old envelope
+old requestId
+```
+
+The frontend then correctly checks:
+
+```js
+env.requestId === input.requestId
+```
+
+and rejects it.
+
+I reproduced exactly:
+
+```text
+request-00000001 -> response request-00000001
+request-00000002 -> response request-00000001
+```
+
+### Correct design
+
+Separate **retry** from **rerun**.
+
+Retry:
+
+```text
+same job ID
+same request ID
+same idempotency key
+```
+
+Explicit rerun:
+
+```text
+new recognition run ID
+new request ID
+new idempotency identity
+supersedes old run
+```
+
+The UI should distinguish:
+
+```text
+RETRY FAILED REQUEST
+RE-RUN RECOGNITION
+```
+
+because they have different semantics and cost.
+
+---
+
+# XI. HIGH SECURITY — IDEMPOTENCY CACHE LOOKUP OCCURS BEFORE REQUEST-BODY VALIDATION AND IS NOT DEVICE-NAMESPACED
+
+Gateway flow currently performs approximately:
+
+```text
+verify device signature
+verify nonce
+read idempotency header
+lookup RECORD_IDEMPOTENCY[idem]
+return cached response if found
+THEN parse/validate request body
+```
+
+The cache key is just:
+
+```text
+idempotencyKey
+```
+
+not:
+
+```text
+deviceId:idempotencyKey
+```
+
+So a valid registered device that somehow learns another user's idempotency key can potentially retrieve that cached recognition envelope without the body being checked against:
+
+* game ID;
+* page ID;
+* source hash;
+* derived hash;
+* request ID.
+
+The key is SHA-256-sized and therefore not practically guessable, which reduces exploit likelihood, but it is still being treated as an unintended bearer token.
+
+### Required correction
+
+Validate the request body first.
+
+Then use a cache key such as:
+
+```text
+deviceId : idempotencyKey
+```
+
+and store/cache a binding descriptor:
+
+```text
+deviceId
+gameId
+pageId
+sourceSha
+derivedSha
+requestId
+```
+
+A cache hit must only be returned if the full binding matches.
+
+---
+
+# XII. HIGH SECURITY — REPLAY, RATE-LIMIT, BUDGET, AND IDEMPOTENCY OPERATIONS ARE NON-ATOMIC
+
+The gateway reference code uses KV-style operations such as:
+
+```text
+get
+compare
+put
+```
+
+for:
+
+* rate counters;
+* daily budgets;
+* nonce replay;
+* idempotency.
+
+Its own README correctly admits that this is not mathematically atomic.
+
+That admission is appropriate, but it means the gateway is **not yet a production security boundary**.
+
+At an eventually consistent edge store, concurrent requests can race:
+
+```text
+request A reads 9
+request B reads 9
+limit = 10
+
+A writes 10
+B writes 10
+```
+
+Two requests pass while the counter records one increment.
+
+Nonce replay and duplicate provider spending can suffer analogous races.
+
+### Required correction
+
+Use an atomic primitive:
+
+* Durable Object;
+* transactional Redis/Lua;
+* database conditional write;
+* platform-native rate limiter;
+* atomic compare-and-set store.
+
+The reference KV worker may remain for testing, but must not be the commissioned production gateway.
+
+---
+
+# XIII. HIGH — THE GATEWAY'S “REAL PROVIDER” SUPPORT IS A PROTOCOL STUB, NOT A REAL VISION ADAPTER
+
+Current provider logic expects:
+
+```text
+RECORD_PROVIDER_ENDPOINT
+RECORD_PROVIDER_TOKEN
+```
+
+and sends a generic RECORD request.
+
+It then expects the endpoint to return data already shaped like RECORD's:
+
+```text
+provider
+layout
+cells
+metadataObservations
+warnings
+```
+
+That is not a direct adapter to a standard major multimodal API.
+
+In practical terms, a separate provider adapter service is still required.
+
+The current implementation also lacks several controls I would expect on that outbound call:
+
+* enforced HTTPS endpoint;
+* explicit redirect rejection;
+* bounded timeout;
+* bounded response bytes before JSON parsing;
+* content-type enforcement;
+* provider-specific error normalization;
+* retention/privacy policy per provider.
+
+The frontend gateway request has a timeout. The **gateway → provider request does not**.
+
+### Required correction
+
+Introduce actual adapters:
+
+```text
+ProviderAdapter
+  ├── FixtureAdapter
+  ├── VendorAAdapter
+  └── VendorBAdapter
+```
+
+Each should own its own bounded schema conversion and privacy behavior.
+
+---
+
+# XIV. HIGH — RECOGNITION JOB STATE IS NOT CRASH-RECOVERABLE
+
+Recognition job flow performs separate writes:
+
+```text
+job = UPLOADING
+write job
+
+receive observation
+write observation
+
+job = COMPLETE
+write job
+```
+
+If iOS terminates the PWA between the observation write and final job write:
+
+```text
+observation exists
+job still says UPLOADING
+```
+
+On next foreground, `processEligibleJobs()` only resumes:
+
+```text
+QUEUED
+FAILED_RETRYABLE
+```
+
+A stale `UPLOADING` job is ignored permanently.
+
+This is a very realistic mobile failure mode.
+
+### Required correction
+
+Foreground recovery should reconcile every nonterminal job.
+
+For example:
+
+```text
+UPLOADING/PROCESSING older than threshold
+        ↓
+observation for requestId exists?
+        ├─ yes → COMPLETE
+        └─ no  → FAILED_RETRYABLE
+```
+
+Ideally observation insertion + completion transition should be committed through one transactional recovery boundary.
+
+Also, the enum contains `PROCESSING`, but current client execution does not meaningfully use it.
+
+---
+
+# XV. HIGH — RECOGNITION RUNS HAVE NO SUPERSESSION/CURRENT-RUN SEMANTICS
+
+Observations are correctly immutable, which is good.
+
+But repeated recognition creates multiple immutable envelopes with no concept of:
+
+```text
+current
+superseded
+comparison candidate
+```
+
+`DB.observations()` returns them, and REVIEW can render multiple observations.
+
+There is no guaranteed deterministic ordering by:
+
+```text
+page order
+move number
+side
+run generation
+```
+
+A user can therefore unknowingly accept an observation from an older run.
+
+### Required correction
+
+Each recognition run should carry:
+
+```text
+runSequence
+supersedesRequestId
+profile
+model
+createdAt
+status
+```
+
+and each page should have an explicit current observation set.
+
+Historical observations remain immutable but visibly historical.
+
+---
+
+# XVI. HIGH — A RECOGNITION CELL CAN BE APPLIED TO THE WRONG PLY
+
+When the user accepts a recognized token, current logic effectively says:
+
+```text
+take observation text
+attempt it as the next legal move
+attach source/observation refs
+```
+
+It does not enforce that the observation cell's:
+
+```text
+moveNumber
+side
+```
+
+matches the next ply.
+
+Therefore if a token from the wrong cell happens to represent a legal move in the current position, it can be accepted.
+
+For example, a cell labeled:
+
+```text
+Move 18 · Black
+```
+
+could theoretically be attached to ply 1 if its SAN happens to be legal.
+
+Certification does not currently validate observation references strongly enough to detect this.
+
+### Required correction
+
+For expected ply `p`:
+
+```text
+expectedMoveNumber = floor((p + 1) / 2)
+expectedSide       = odd ? white : black
+```
+
+Recognition acceptance should refuse mismatched cells except through an explicit documented override that records a correction event.
+
+---
+
+# XVII. HIGH — DERIVED RECOGNITION BLOBS ARE NOT REHASHED BEFORE CAPSULE CREATION
+
+Source pages are rehashed at certification/export.
+
+Derived assets receive useful SHA metadata.
+
+But `buildCapsule()` primarily compares the observation's declared derived hash to the asset's stored hash metadata before placing the actual asset bytes into the archive.
+
+It does not first independently recompute:
+
+```text
+SHA-256(asset.blob)
+```
+
+against the stored derived descriptor.
+
+The generated manifest later hashes the actual bytes, and `verifyCapsule()` can detect inconsistency afterward.
+
+That means RECORD can potentially **generate an export that its own verifier rejects**.
+
+### Required correction
+
+Before Capsule generation:
+
+```text
+rehash every source blob
+rehash every derived blob
+validate every observation
+resolve every observation ref
+verify certification
+```
+
+Then, preferably:
+
+```text
+build Capsule
+↓
+run verifyCapsule() against produced bytes
+↓
+only then offer Share/Download
+```
+
+A high-integrity exporter should never knowingly emit an internally invalid archive.
+
+---
+
+# XVIII. HIGH — CAPSULE VERIFICATION DOES NOT VERIFY GATEWAY SIGNATURES ON RECOGNITION OBSERVATIONS
+
+The client verifies remote recognition signatures when receiving them.
+
+That is good.
+
+The Capsule stores the signed envelopes.
+
+Also good.
+
+But `verifyCapsule()` only validates their schema and source/derived hash binding.
+
+It does not cryptographically verify the stored gateway signature.
+
+Therefore a Capsule verifier cannot distinguish:
+
+```text
+valid gateway-signed remote observation
+unsigned fixture observation
+forged signed-looking observation
+imported unverified observation
+```
+
+purely from cryptographic verification.
+
+### Required correction
+
+Capsule verification needs a trust context:
+
+```text
+trusted gateway key ID
+trusted gateway public JWK/fingerprint
+```
+
+and should classify observations:
+
+```text
+SIGNED_VERIFIED
+SIGNATURE_INVALID
+UNSIGNED_FIXTURE
+IMPORTED_UNVERIFIED
+UNKNOWN_KEY
+```
+
+Do not collapse all recognition observations into one trust category.
+
+---
+
+# XIX. HIGH — RESTORED CERTIFICATIONS ARE NOT REVERIFIED BEFORE DATABASE ACCEPTANCE
+
+Backup parsing verifies archive-level integrity very thoroughly.
+
+That is good.
+
+But the restored game object can contain:
+
+```text
+certificationStatus = VALID
+certification = {...}
+```
+
+and restore validates the game schema without necessarily recalculating the certification against imported source data.
+
+Combined with the UI badge problem, a self-consistent but adversarial backup could import a stale or fabricated “VALID” status.
+
+### Required correction
+
+Restore preview should classify each incoming game:
+
+```text
+CERTIFICATION VERIFIED
+CERTIFICATION INVALID
+CERTIFICATION UNVERIFIABLE
+UNCERTIFIED
+```
+
+Only the first should retain `VALID`.
+
+Everything else should enter:
+
+```text
+INVALIDATED
+```
+
+or quarantine.
+
+---
+
+# XX. HIGH — `IMPORT AS COPY` CAN PRODUCE DANGLING OBSERVATION REFERENCES
+
+The copy/remap function builds an ID map in stages.
+
+Game move `observationRefs` are remapped before every recognition observation's request ID has necessarily been added to that map.
+
+If an observation exists without a corresponding recognition job, the mapping for its request ID is created later.
+
+Result:
+
+```text
+copied move:
+oldRequestId:cell
+
+copied observation:
+newRequestId
+```
+
+The game now points at the old observation identity.
+
+Current snapshot validation does not resolve move observation references, so this can survive validation.
+
+### Required correction
+
+Precompute mappings for **all object identities before modifying any object**:
+
+```text
+games
+pages
+assets
+jobs
+observation request IDs
+events
+```
+
+Then perform transformation in a second pass.
+
+Finally perform full referential validation.
+
+---
+
+# XXI. HIGH — THE OFFLINE SERVICE-WORKER SHELL OMITS `src/perspective.js`
+
+This is a concrete offline correctness bug.
+
+The application import graph contains:
+
+```text
+src/image.js
+    ↓
+src/perspective.js
+```
+
+But `sw.js` precaches:
+
+```text
+src/image.js
+```
+
+and does **not** include:
+
+```text
+src/perspective.js
+```
+
+This undermines the claimed deterministic offline application shell.
+
+The first online session may happen to leave it in the normal browser HTTP cache, but that is not the same assurance as explicit PWA CacheStorage precaching.
+
+### Required correction
+
+Do not maintain the shell module list manually.
+
+The build should generate a dependency/precache manifest from `dist/`.
+
+QA should recursively resolve the application's static import graph and fail if a required runtime module is not present in the precache set.
+
+---
+
+# XXII. HIGH — `runtime.json` IS EFFECTIVELY CACHE-FIRST DESPITE THE CLIENT REQUESTING `no-store`
+
+The frontend deliberately loads runtime configuration with:
+
+```js
+cache: 'no-store'
+```
+
+This is appropriate for gateway/key configuration.
+
+But the service worker intercepts the request and first does:
+
+```js
+caches.match(e.request)
+```
+
+The file is also in the precached shell.
+
+Therefore security-sensitive runtime configuration can remain stale despite the client's explicit intention to bypass caches.
+
+This matters for:
+
+* gateway URL rotation;
+* recognition enable/disable;
+* public key changes;
+* emergency gateway shutdown.
+
+### Required correction
+
+Special-case:
+
+```text
+config/runtime.json
+```
+
+as network-first/no-store.
+
+If offline, fallback to cached config may be allowed only with a clear status such as:
+
+```text
+USING CACHED RUNTIME CONFIGURATION
+```
+
+and remote recognition should fail closed if its trust configuration is stale beyond a policy limit.
+
+---
+
+# XXIII. HIGH/MEDIUM — SERVICE-WORKER READS STILL SEARCH ALL ORIGIN CACHES
+
+0.2 correctly fixed the catastrophic 0.1 behavior that deleted foreign caches.
+
+However fetch reads still use global:
+
+```js
+caches.match(request)
+```
+
+rather than opening RECORD's specific cache.
+
+On a shared origin, global CacheStorage lookup can search other named caches.
+
+Dedicated-origin deployment substantially mitigates this, but RECORD should still enforce its own namespace internally:
+
+```js
+const cache = await caches.open(CACHE);
+await cache.match(request);
+```
+
+This is a defense-in-depth correction.
+
+---
+
+# XXIV. HIGH — IMAGE MIME TYPE IS TRUSTED FROM BROWSER METADATA RATHER THAN VERIFIED FROM BYTES
+
+Image intake now has a much stronger allowlist.
+
+However declared MIME type is still treated as authoritative.
+
+There is no strong magic-byte verification that:
+
+```text
+image/jpeg → JPEG bytes
+image/png  → PNG bytes
+image/webp → WebP bytes
+```
+
+actually match.
+
+This can create an evidentiary mismatch between:
+
+```text
+stored MIME
+file extension
+actual encoded source
+```
+
+Animated WebP is another unresolved case: a source could represent multiple frames while the derived recognition image naturally represents one decoded raster.
+
+### Required correction
+
+Magic-sniff the accepted formats.
+
+For WebP, either:
+
+1. explicitly parse and reject animation; or
+2. remove WebP from the evidentiary source allowlist until this exists.
+
+The application should record:
+
+```text
+declaredMime
+detectedMime
+```
+
+during intake and require agreement.
+
+---
+
+# XXV. HIGH — BACKUP, RESTORE, CAPSULE EXPORT, AND SHARE REMAIN FUNDAMENTALLY IN-MEMORY OPERATIONS
+
+This was a prominent 0.1 audit concern and is **not fully solved**.
+
+The backup implementation reads every source blob into a `Uint8Array`, stores all file arrays in a list, computes descriptors, then builds an entire ZIP in memory.
+
+Restore reads an entire ZIP into memory.
+
+Capsule creation similarly accumulates game evidence and derived assets before constructing the ZIP.
+
+The allowed backup archive ceiling is hundreds of megabytes.
+
+That is dangerous on iPhone.
+
+For a 500 MB backup, the implementation can simultaneously hold some combination of:
+
+```text
+original Blobs
+Uint8Array copies
+ZIP input members
+ZIP output
+manifest structures
+File/Blob object for sharing
+browser internal copies
+```
+
+The peak heap can greatly exceed the logical archive size.
+
+A storage-quota estimate does not solve JavaScript heap exhaustion.
+
+### Required correction
+
+The long-term fix is a streaming or chunked archive writer/reader.
+
+Short-term 0.2.1 protections should include conservative iPhone-tested caps considerably below theoretical browser storage limits.
+
+The system must also expose:
+
+```text
+estimated archive bytes
+estimated peak memory class
+progress
+cancel
+```
+
+The current hundreds-of-megabytes policy is not justified until physical-device stress testing exists.
+
+---
+
+# XXVI. HIGH — IMAGE PREPROCESSING ITSELF CAN CREATE VERY LARGE PEAK MEMORY
+
+The intake limit allows approximately 24 million decoded pixels.
+
+A 24 MP RGBA canvas alone is roughly:
+
+```text
+24,000,000 × 4 ≈ 96 MB
+```
+
+before considering:
+
+* original decoded image;
+* work canvas;
+* perspective output;
+* normalization buffers;
+* JPEG output;
+* thumbnail;
+* browser implementation overhead.
+
+The 0.2 projective pipeline is technically much stronger than 0.1, but its maximum resource policy has not been physically commissioned on iOS.
+
+### Better architecture
+
+Preserve the exact encoded original as evidence.
+
+But create the processing raster through bounded downscaled decode rather than constructing a full-resolution working canvas when unnecessary.
+
+For recognition, a 24 MP intermediate is generally unnecessary.
+
+---
+
+# XXVII. HIGH — REPETITION DETECTION CAN UNDERCOUNT DRAWS BECAUSE IT USES RAW FEN EN-PASSANT STATE
+
+The chess engine's legal move generation performed well against Stockfish.
+
+This issue is subtler and will not normally appear in perft tests.
+
+The repetition key includes the FEN en-passant field directly.
+
+After every double pawn push, FEN can include an en-passant target square even when no legal en-passant capture exists.
+
+For repetition purposes, two positions that have the same legal move possibilities should not be distinguished merely by a useless “phantom” en-passant target.
+
+Using raw FEN can therefore cause:
+
+```text
+position A: ep = -
+position B: ep = e6, but no legal EP capture exists
+```
+
+to be counted as different even though their relevant legal state is equivalent.
+
+This can undercount threefold/fivefold repetition.
+
+### Required correction
+
+Normalize the repetition key:
+
+```text
+EP square included only if at least one legal en-passant capture actually exists
+```
+
+including king-safety legality.
+
+---
+
+# XXVIII. HIGH — REAL REMOTE RECOGNITION REMAINS UNCOMMISSIONED AND THE RELEASE SHOULD NOT YET BE TOURNAMENT-FROZEN
+
+This is not hidden by the package; `RELEASE_QA.md` says so explicitly.
+
+Still, it is a release-readiness weakness.
+
+Pending are:
+
+```text
+physical iPhone camera
+Home Screen install
+standalone PWA
+iOS process kill/restart
+IndexedDB persistence
+offline reopen
+share sheet
+VoiceOver
+real weak-network retry
+deployed gateway
+real vision provider
+accuracy benchmark
+latency benchmark
+cost benchmark
+adversarial scoresheet benchmark
+```
+
+RECORD's core use case is specifically **an iPhone immediately after an OTB game**.
+
+Until the physical-iPhone matrix passes, the most important environment has not been commissioned.
+
+---
+
+# XXIX. HIGH — THE REQUIRED DEDICATED-ORIGIN MIGRATION ITSELF NEEDS A DATA-CUTOVER PLAN
+
+0.2 correctly refuses real recognition on a shared GitHub Pages origin.
+
+But browser storage is origin-bound.
+
+If a user begins working at:
+
+```text
+https://username.github.io/record/
+```
+
+and later switches to:
+
+```text
+https://record.example.com/
+```
+
+the new origin cannot see the old origin's IndexedDB or device private key.
+
+Therefore the security improvement creates a migration event.
+
+### Required operational procedure
+
+Before switching:
+
+```text
+export backup
+verify backup
+record checksum
+```
+
+Then:
+
+```text
+deploy dedicated origin
+install new PWA
+restore backup
+verify record count
+verify source hashes
+reverify certifications
+register new device key
+```
+
+Only then retire the old origin.
+
+I would strongly recommend making the dedicated-origin transition **before accumulating meaningful tournament data**.
+
+---
+
+# XXX. HIGH — THERE IS STILL NO ACTUAL PRODUCTION PROVIDER BENCHMARK
+
+The architecture now preserves AI uncertainty correctly, but product usefulness is still unproven.
+
+The release has deterministic fixture recognition.
+
+It does not yet establish real-world metrics for actual handwritten score sheets.
+
+The next commissioning report needs:
+
+```text
+page detection success
+top-1 token accuracy
+top-3 token recall
+cell localization accuracy
+metadata field accuracy
+retake rate
+recognition latency
+cost per game
+human review seconds per page
+failure rate under poor signal
+```
+
+Without that, “VISION” is architecturally present but not empirically validated.
+
+---
+
+# XXXI. HIGH — ACCEPTING A RECOGNITION OBSERVATION DOES NOT ESTABLISH THAT ITS TEXT CORRESPONDS TO ITS CLAIMED SOURCE CROP
+
+Even after fixing dangling observation references, there remains a deeper evidentiary issue.
+
+The system can verify:
+
+```text
+this observation envelope came from page X
+this cell says crop Y
+this AI returned "Rc8"
+```
+
+It cannot independently establish that the crop coordinates really correspond to the handwritten row claimed.
+
+This is naturally a vision-model problem, but the software should at least make the linkage inspectable.
+
+0.2.1/0.3 REVIEW should present the **actual extracted crop** alongside the accepted move whenever the provenance is machine-observed.
+
+The user certification event should therefore reflect that the user had an opportunity to inspect the linked source evidence, rather than simply approving machine text.
+
+---
+
+# XXXII. MEDIUM/HIGH — SOURCE VIEWER OBJECT URLS ARE BETTER MANAGED BUT NOT PERFECTLY SCOPED
+
+The release introduced an ObjectURL manager.
+
+However source-viewer dialogs can still create object URLs whose cleanup is tied more broadly to rerendering rather than strictly to dialog closure.
+
+Repeatedly opening and closing large full-resolution pages can therefore retain URL-backed resources longer than necessary.
+
+This is particularly worth fixing on iOS, where memory pressure is already a concern.
+
+Every modal/view should own and destroy its own blob URLs.
+
+---
+
+# XXXIII. MEDIUM/HIGH — THE IMAGE QUALITY DETECTOR IS STILL A HEURISTIC, NOT A VALIDATED DOCUMENT-QUALITY SYSTEM
+
+`record-preprocess/2` is a substantial improvement:
+
+* quadrilateral detection;
+* projective rectification;
+* fail-safe fallback;
+* local illumination normalization.
+
+But the confidence and quality diagnostics are still algorithmic heuristics.
+
+Synthetic skew tests demonstrate the code works on constructed examples.
+
+They do not establish robustness against:
+
+* glossy score sheets;
+* pencil;
+* carbon copy;
+* hard shadows;
+* fingers covering corners;
+* folded paper;
+* ruled notebooks;
+* marginal continuation moves;
+* unusually dark tournament halls;
+* perspective plus blur;
+* small handwriting.
+
+The app must avoid giving false reassurance such as:
+
+> quality good
+
+when the diagnostic itself is weak.
+
+Until calibrated, use language such as:
+
+```text
+CAPTURE CHECK PASSED
+```
+
+rather than implying statistical recognition quality.
+
+---
+
+# XXXIV. MEDIUM — STRICT FEN VALIDATION IS IMPROVED BUT NOT A FULL REACHABILITY PROVER
+
+The FEN validation repairs made after the previous QA failure are useful.
+
+But “strict” still means structurally/semantically plausible, not:
+
+> demonstrably reachable from a legal chess game.
+
+For example, complete historical consistency of:
+
+* castling rights;
+* en-passant history;
+* halfmove clock;
+* prior double push;
+
+is difficult to infer from FEN alone.
+
+The documentation should distinguish:
+
+```text
+FEN STRUCTURALLY VALID
+FEN SEMANTICALLY PLAUSIBLE
+```
+
+from:
+
+```text
+POSITION PROVEN REACHABLE
+```
+
+which RECORD does not establish.
+
+---
+
+# XXXV. MEDIUM — TIME-CONTROL INPUT IS STILL TOO FREE-FORM FOR COMPLEX CONTROLS
+
+The 0.2 fix improves the common:
+
+```text
+90+30
+```
+
+case into correct PGN-second semantics.
+
+But staged controls remain a human-interface problem.
+
+A user could type something like:
+
+```text
+40/90
+```
+
+meaning:
+
+> 40 moves in 90 minutes
+
+while PGN machine semantics involve seconds.
+
+The robust solution is a structured editor:
+
+```text
+Stage 1: 40 moves / 90 min
+Stage 2: rest / 30 min
+Increment: 30 sec from move 1
+```
+
+and RECORD generates canonical `TimeControl` automatically.
+
+---
+
+# XXXVI. MEDIUM/HIGH — EARLIER-MOVE EDITING EXISTS BUT IS NOT YET AN EXCELLENT IPHONE WORKFLOW
+
+0.2 added deterministic earlier-move replacement and tail rebuilding.
+
+Good.
+
+However the move editing affordance relies heavily on context-menu behavior.
+
+That is poor discoverability for the primary target device.
+
+The mobile path should be:
+
+```text
+tap move
+↓
+position selected
+↓
+EDIT
+```
+
+with an app-owned action sheet.
+
+The previous audit also contemplated:
+
+```text
+INSERT BEFORE
+REPLACE
+DELETE MOVE
+DELETE FROM HERE
+```
+
+The present implementation is still narrower.
+
+This will become important once 0.3 starts repairing recognition sequences.
+
+---
+
+# XXXVII. MEDIUM — RECOGNITION JOB FLAGS ARE NOT FULLY RECONCILED AFTER RECOVERY
+
+The game carries:
+
+```text
+hasFailedJob
+offlineQueue
+```
+
+These are useful status indicators.
+
+But status transition logic is not fully centralized, so a game can retain a stale failure/offline flag after subsequent successful processing.
+
+This is not evidentiary corruption, but it erodes trust in the operational dashboard.
+
+These flags should be **derived from current jobs** wherever possible rather than independently persisted.
+
+---
+
+# XXXVIII. MEDIUM — AUDIT EVENTS ARE NOT INCLUDED IN THE CAPSULE
+
+0.2 begins the append-only application audit stream.
+
+That was a good decision.
+
+But a Capsule currently exports:
+
+```text
+game
+sources
+derived assets
+recognition observations
+```
+
+without the corresponding mutation/correction audit history.
+
+For a product whose differentiation is provenance, this leaves downstream CAPTUREDMIRAGE unable to answer questions such as:
+
+```text
+Was move 27 machine-read?
+Was it later changed?
+When?
+Was the source page reordered?
+Was certification invalidated and reissued?
+```
+
+The audit stream does not necessarily need to become a cryptographic blockchain.
+
+But relevant game events should eventually travel with the record.
+
+---
+
+# XXXIX. MEDIUM — CERTIFICATION METADATA ITSELF IS NOT AUTHENTICATED
+
+The canonical hash covers the game/source evidence.
+
+It does not provide an external signature over the certification assertion.
+
+Fields such as:
+
+```text
+certifiedAt
+assertion
+assertionVersion
+```
+
+are not protected by an independent signer.
+
+The manifest currently has:
+
+```json
+"signatures": []
+```
+
+This is appropriately documented as a future boundary.
+
+But terminology must remain precise:
+
+> Current certification proves internal consistency of a locally asserted record.
+
+It does not prove:
+
+> A particular person/device cryptographically made this assertion and it has not been rewritten by someone capable of rebuilding the archive.
+
+---
+
+# XL. MEDIUM/HIGH — CAPSULES HAVE INTEGRITY BUT NOT AUTHENTICITY
+
+Related to the previous point, anyone who can rewrite:
+
+```text
+record.json
+game.pgn
+source files
+manifest
+hashes
+```
+
+can make a new internally valid unsigned Capsule.
+
+That is why my `game.pgn` attack could rebuild a self-consistent archive.
+
+Even after the PGN semantic mismatch is fixed, a wholesale rewrite remains possible.
+
+For personal local transport this is acceptable.
+
+For future:
+
+* coach transfer;
+* commercial records;
+* evidence exchange;
+* remote CAPTUREDMIRAGE ingestion;
+
+device signing becomes important.
+
+### Future model
+
+```text
+device signing key
+        ↓
+canonicalRecordHash
+certification assertion
+        ↓
+ECDSA/Ed25519 signature
+        ↓
+Capsule signatures[]
+```
+
+The private key should be non-exportable where browser/platform support permits.
+
+---
+
+# XLI. MEDIUM — Cburnett PIECES NEED COMMERCIAL-LICENSING REVIEW BEFORE RECORD IS SOLD
+
+The package now correctly identifies the Cburnett piece set as GPLv2+ rather than pretending the artwork is proprietary.
+
+That is a significant documentation improvement.
+
+However the user has discussed eventual commercial licensing of RECORD.
+
+Bundling GPL-licensed artwork alongside a proprietary product deserves actual licensing review before commercialization.
+
+I am not asserting here that the entire RECORD codebase automatically becomes GPL; that legal conclusion depends on distribution and derivative-work analysis.
+
+The prudent engineering/business solution is either:
+
+* obtain appropriate legal guidance/permission; or
+* commission/use a permissively licensed piece set before commercial release.
+
+Do not discover this at 1.0 launch time.
+
+---
+
+# XLII. MEDIUM/HIGH — BROWSER CI IS A SMOKE TEST, NOT THE HOSTILE ACCEPTANCE MATRIX
+
+The Playwright flow covers useful basics:
+
+```text
+boot
+new game
+fixture upload
+fixture recognition
+move entry
+reload persistence
+library
+offline reopen
+```
+
+It does not yet exercise several of the very areas this audit found dangerous:
+
+* actual 0.1→0.2 IndexedDB migration;
+* invalid certification badge;
+* source reorder;
+* earlier-move replacement;
+* backup → wipe → restore through browser IndexedDB;
+* Capsule UI verify;
+* malicious Capsule;
+* recognition job crash recovery;
+* stale `UPLOADING`;
+* rerun vs retry;
+* service-worker update;
+* runtime key rotation;
+* malformed gateway reply.
+
+Those need browser-level tests, not merely Node tests.
+
+---
+
+# XLIII. MEDIUM — THE PLAYWRIGHT CI TOOLCHAIN IS NOT FULLY HERMETIC
+
+The workflow installs an exact Playwright version, which is better than an unbounded tag.
+
+But browser tooling is still fetched during CI rather than being part of a strongly locked reproducible dependency graph with preserved browser revision provenance.
+
+For ordinary software this would be minor.
+
+For a project using CI as part of its release-evidence story, I would eventually record:
+
+```text
+Playwright package exact integrity
+Chromium revision
+WebKit revision
+Node version
+runner image
+```
+
+in the QA receipt.
+
+---
+
+# XLIV. MEDIUM — IMPORTED SETTINGS ARE NOT STRICTLY ALLOWLISTED ON RESTORE
+
+Backup **creation** filters settings through a safe allowlist.
+
+Backup **parsing/restoration** is looser.
+
+The DB restore code excludes one special setting ID but will accept other incoming settings.
+
+That creates future-compatibility/security risk because a malicious archive may prepopulate a setting that becomes security-sensitive in a later release.
+
+Apply the allowlist symmetrically:
+
+```text
+export allowlist
+import allowlist
+```
+
+Unknown settings should be dropped or quarantined.
+
+---
+
+# XLV. MEDIUM — ORIGINAL SCORE-SHEET PHOTOS CAN CARRY PRIVATE EXIF INTO EXPORTED CAPSULES
+
+The recognition derivative intentionally strips metadata.
+
+Good.
+
+The exact original source image is preserved, also correctly, because it is evidence.
+
+But that exact original is placed in exported Capsules.
+
+Depending on how a photo was obtained and how iOS/browser file handling behaves, the original can contain metadata such as:
+
+* capture time;
+* device details;
+* potentially location.
+
+That means:
+
+> recognition service does not receive EXIF
+
+does not imply:
+
+> exported Capsule does not contain EXIF.
+
+For personal local CAPTUREDMIRAGE transfer this may be acceptable.
+
+Before sharing Capsules externally, RECORD should clearly disclose:
+
+> ORIGINAL SOURCE PHOTOS ARE INCLUDED UNMODIFIED AND MAY CONTAIN EMBEDDED METADATA.
+
+A future privacy-preserving export class could separate:
+
+```text
+FULL EVIDENCE CAPSULE
+PRIVACY-SANITIZED SHARE COPY
+```
+
+without conflating them.
+
+---
+
+# XLVI. MEDIUM/HIGH — BASE64 IMAGE TRANSPORT ADDS SIGNIFICANT MEMORY AND BANDWIDTH OVERHEAD
+
+Remote recognition converts a derived image to base64 in JavaScript:
+
+```text
+binary → Uint8Array → JavaScript string → base64 string → JSON body
+```
+
+Base64 alone increases size by roughly one-third.
+
+More importantly on iPhone, the intermediate JavaScript strings can significantly increase peak memory.
+
+A binary `multipart/form-data` request or signed binary body would be more efficient.
+
+The signed request can still bind:
+
+```text
+body SHA-256
+metadata
+image SHA-256
+```
+
+without base64 inflation.
+
+---
+
+# XLVII. MEDIUM — POSTGAME NOTES ARE NOT MAXIMALLY CRASH-SAFE DURING TYPING
+
+Most core evidence mutations persist immediately.
+
+Text areas/forms commonly save on change/blur or explicit action.
+
+An iOS process kill while the user is typing a postgame self-assessment can therefore lose the newest unsaved text.
+
+This is especially relevant because the product is designed for immediate tournament use and postgame recall is time-sensitive.
+
+Use a short debounced save, e.g. after several hundred milliseconds, plus flush on visibility change.
+
+---
+
+# XLVIII. MEDIUM — HTTP-LEVEL CLICKJACKING DEFENSE REMAINS LIMITED ON RAW GITHUB PAGES
+
+The application has useful frontend frame defense and a restrictive meta CSP.
+
+But a true:
+
+```text
+Content-Security-Policy: frame-ancestors 'none'
+```
+
+must be delivered as an HTTP header; meta CSP cannot provide that directive.
+
+Once RECORD moves to a dedicated domain, consider fronting it with an edge layer capable of supplying:
+
+```text
+CSP headers
+Referrer-Policy
+Permissions-Policy
+X-Content-Type-Options
+```
+
+This becomes more important once sensitive scoresheets live in the PWA.
+
+---
+
+# XLIX. MEDIUM — THE SERVICE-WORKER CACHE LIST SHOULD BE GENERATED, NOT HAND-CURATED
+
+The missing `perspective.js` is the immediate bug.
+
+The deeper process failure is that manually maintaining:
+
+```js
+const SHELL = [...]
+```
+
+will create this class of omission again.
+
+The release pipeline already builds an allowlisted `dist/`.
+
+It should generate something like:
+
+```text
+precache-manifest.json
+```
+
+with content hashes of every required shell asset.
+
+That also gives deterministic update invalidation.
+
+---
+
+# L. MEDIUM — THE RELEASE MANIFEST IS EXCELLENT FOR REPRODUCIBILITY BUT IS UNSIGNED
+
+The internal manifest proves:
+
+> the ZIP matches the manifest supplied inside that ZIP.
+
+The external `.sha256` gives a stronger independent anchor when distributed separately.
+
+But neither currently carries a digital signature.
+
+For your personal workflow this is acceptable.
+
+For public commercial releases, sign the release checksum/manifest using a release-signing key or GitHub attestation mechanism.
+
+That lets users distinguish:
+
+```text
+internally self-consistent archive
+```
+
+from:
+
+```text
+archive genuinely published by RECORD's developer
+```
+
+---
+
+# LI. WHAT THE 37/37 TEST SUITE ACTUALLY MEANS AFTER THIS AUDIT
+
+The tests are not worthless. Quite the opposite.
+
+They successfully demonstrate a large number of useful invariants:
+
+* legal chess replay;
+* perft baseline;
+* SAN;
+* castling;
+* en passant;
+* promotion;
+* checkmate;
+* basic draw handling;
+* FEN sanity;
+* projective image transforms;
+* source hashing;
+* backup member tamper detection;
+* Capsule member tamper detection;
+* recognition schema rejection;
+* gateway body signature verification;
+* derived-image digest verification;
+* foreign service-worker cache deletion prevention;
+* certification hash staleness detection.
+
+But the audit demonstrates a classic assurance lesson:
+
+> **Tests verify the claims someone remembered to encode. Adversarial auditing searches for claims nobody encoded.**
+
+The current suite did not ask:
+
+```text
+Can I certify zero moves?
+Can I certify needsReview?
+Does every observationRef exist?
+Does game.pgn equal record.json?
+Can bootstrap overwrite a device?
+What does deliberate recognition re-run do?
+Does the actual old database migrate?
+Can a dependent import ID overwrite another game?
+What happens if iOS dies after observation write?
+Is perspective.js actually precached?
+```
+
+Those should all become tests now.
+
+---
+
+# LII. RECOMMENDED RELEASE CLASSIFICATION
+
+I would not begin 0.3 legal-sequence reconstruction from the current sealed package without first producing:
+
+# **RECORD 0.2.1 — INTEGRITY CORRECTION**
+
+This should be a corrective release, not a feature release.
+
+Its mandatory P0 scope should be:
+
+| Priority | Mandatory correction                                                               |
+| -------- | ---------------------------------------------------------------------------------- |
+| P0-01    | Real `record-foundation` v1 → `record-chess` v2 migration                          |
+| P0-02    | Prohibit zero-move ordinary certification                                          |
+| P0-03    | `needsReview` and every blocking uncertainty must prevent certification            |
+| P0-04    | Derived certification badges; never trust raw `VALID` enum                         |
+| P0-05    | Resolve and cryptographically bind all `observationRefs`                           |
+| P0-06    | Verify `game.pgn` semantically against canonical record                            |
+| P0-07    | Reverify imported certifications before accepting `VALID`                          |
+| P0-08    | Cross-store restore collision preflight                                            |
+| P0-09    | Fix import-as-copy observation ID remapping                                        |
+| P0-10    | One-time bootstrap token + reject silent device-key overwrite                      |
+| P0-11    | Device-namespaced, body-bound idempotency cache                                    |
+| P0-12    | Distinguish recognition retry from deliberate rerun                                |
+| P0-13    | Recover stale `UPLOADING/PROCESSING` jobs after crash                              |
+| P0-14    | Enforce observation moveNumber/side ↔ ply correspondence                           |
+| P0-15    | Rehash derived blobs before export and self-verify generated Capsule               |
+| P0-16    | Verify gateway observation signatures in Capsule verification                      |
+| P0-17    | Add missing `perspective.js` to precache and generate shell manifest automatically |
+| P0-18    | Make runtime security config network-first/fail-closed                             |
+| P0-19    | Magic-sniff source images and reject animated/ambiguous formats                    |
+| P0-20    | Reduce/stream large backup and Capsule memory use                                  |
+| P0-21    | Fix legal repetition key semantics                                                 |
+| P0-22    | Expand browser QA over migration, recovery, restore and certification              |
+| P0-23    | Complete physical-iPhone acceptance before tournament freeze                       |
+| P0-24    | Commission an atomic production gateway                                            |
+| P0-25    | Commission a real provider adapter and benchmark                                   |
+
+I would treat those as the threshold before calling the 0.2 family evidentiary-grade.
+
+---
+
+# LIII. NEW HOSTILE RELEASE GATES I WOULD ADD
+
+0.2.1 should not freeze unless each of these becomes an automated or externally documented PASS:
+
+```text
+actual 0.1 DB → 0.2.1 migration                  PASS
+old source bytes preserved exactly               PASS
+blank ordinary game certification rejected       PASS
+needsReview certification rejected               PASS
+unreadable flag invalidates certification         PASS
+stale raw VALID badge never shown as certified   PASS
+dangling observationRef rejected                  PASS
+wrong-cell-to-ply binding rejected                PASS
+PGN/record semantic mismatch rejected             PASS
+imported stale certification invalidated          PASS
+dependent-store collision restore rejected        PASS
+IMPORT_AS_COPY observation remap parity           PASS
+bootstrap second-use rejected                     PASS
+existing device-key overwrite rejected            PASS
+idempotency isolated by device/binding            PASS
+retry same job returns same result                PASS
+explicit rerun produces new run                   PASS
+crash after observation write recovers            PASS
+stale UPLOADING recovery                           PASS
+derived blob mutation blocks export               PASS
+Capsule observation signature verification        PASS
+all static imports precached                       PASS
+runtime.json rotation bypasses stale cache         PASS
+JPEG/PNG/WebP magic mismatch rejected              PASS
+animated source policy enforced                    PASS
+iPhone large-image memory stress                   PASS
+iPhone backup memory stress                        PASS
+repetition phantom-EP regression suite             PASS
+browser backup → wipe → restore                    PASS
+browser certification invalidation                 PASS
+physical iPhone Home Screen                        PASS
+physical iPhone offline restart                    PASS
+physical iPhone weak-network recognition retry     PASS
+production gateway replay race test                PASS
+real provider hostile document test                PASS
+```
+
+---
+
+# FINAL FORENSIC JUDGMENT
+
+RECORD has advanced substantially.
+
+The 0.2 release is no longer a toy PWA. It has real concepts of:
+
+```text
+immutable source evidence
+source hashes
+derived recognition evidence
+recognition provenance
+signed gateway responses
+canonical move ledger
+record revisions
+certification hashes
+Capsule integrity
+backup integrity
+audit events
+offline operation
+```
+
+That architecture is worth preserving.
+
+But this hostile pass uncovered several places where **the implementation currently looks stronger than the actual invariant**.
+
+The most important examples are:
+
+> **A record can be marked for review and still be certified.**
+
+> **A certification can reference recognition evidence that does not exist.**
+
+> **A Capsule can contain a PGN for a different game and still pass its own verifier.**
+
+> **The advertised v1→v2 migration does not migrate the real v1 database.**
+
+> **The supposedly one-time gateway bootstrap credential can currently replace an existing device key.**
+
+> **A deliberate recognition rerun collides with the idempotency mechanism.**
+
+> **A crash during recognition can strand a job indefinitely.**
+
+> **Large backup/export paths are still much too memory-hungry to regard as iPhone-safe without physical testing.**
+
+Those are exactly the sort of defects that matter in an application whose central claim is not merely convenience but **trustworthy reconstruction and preservation of what actually happened over the board**.
+
+My release disposition would therefore be:
+
+**0.2.0 VISION / INTEGRITY — ARCHITECTURALLY STRONG, HOSTILE AUDIT FAILED FOR TOURNAMENT/EVIDENTIARY FREEZE.**
+
+I would keep the current ZIP as an important audited checkpoint, freeze these findings into a formal 0.2 hostile-audit document, and make **0.2.1 INTEGRITY CORRECTION** the immediate successor before any 0.3 reconstruction-beam work begins.

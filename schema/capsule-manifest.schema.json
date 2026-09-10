@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "capsuleInstanceId",
+    "createdAt",
+    "canonicalRecordHash",
+    "certificationFingerprint",
+    "observationRoot",
+    "auditRoot",
+    "capsuleContentRoot",
+    "files",
+    "signatures"
+  ],
+  "properties": {
+    "schema": {
+      "const": "record-capsule-manifest/3"
+    },
+    "capsuleInstanceId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "canonicalRecordHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "certificationFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observationRoot": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "auditRoot": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "capsuleContentRoot": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "files": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "size",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "signatures": {
+      "type": "array",
+      "maxItems": 16
+    }
+  }
+}

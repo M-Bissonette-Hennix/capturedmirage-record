@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "gameId",
+    "sourcePageId",
+    "schema",
+    "createdAt",
+    "preprocessorVersion",
+    "purpose",
+    "mime",
+    "width",
+    "height",
+    "size",
+    "sha256",
+    "quality",
+    "transform"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "gameId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "sourcePageId": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "schema": {
+      "const": "record-derived-asset/2"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "preprocessorVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "purpose": {
+      "enum": [
+        "recognition",
+        "thumbnail"
+      ]
+    },
+    "mime": {
+      "const": "image/jpeg"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "quality": {
+      "type": "object"
+    },
+    "transform": {
+      "type": "object"
+    }
+  }
+}

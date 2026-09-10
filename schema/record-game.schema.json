@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "record-game.schema.json",
+  "title": "RECORD Game v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schema",
+    "recordType",
+    "createdAt",
+    "updatedAt",
+    "revision",
+    "sourceRevision",
+    "workflowState",
+    "certificationStatus",
+    "metadata",
+    "startFen",
+    "moves",
+    "notes",
+    "certification",
+    "flags"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 96,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "schema": {
+      "const": "record-game/3"
+    },
+    "recordType": {
+      "enum": [
+        "PLAYED_GAME",
+        "FORFEIT",
+        "BYE",
+        "ABANDONED_BEFORE_MOVE"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceRevision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "workflowState": {
+      "enum": [
+        "NEW",
+        "CAPTURED",
+        "VISION_PENDING",
+        "OBSERVATIONS_AVAILABLE",
+        "RECONSTRUCTION_PENDING",
+        "RECONSTRUCTION_AVAILABLE",
+        "EDITING",
+        "READY_FOR_REVIEW",
+        "COMPLETE",
+        "EXPORTED"
+      ]
+    },
+    "certificationStatus": {
+      "enum": [
+        "UNCERTIFIED",
+        "VALID",
+        "INVALIDATED",
+        "UNVERIFIABLE"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "site",
+        "date",
+        "round",
+        "board",
+        "section",
+        "white",
+        "black",
+        "result",
+        "timeControl",
+        "resultProvenance"
+      ],
+      "properties": {
+        "event": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "site": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "round": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "board": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "section": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "white": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "black": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "result": {
+          "enum": [
+            "*",
+            "1-0",
+            "0-1",
+            "1/2-1/2"
+          ]
+        },
+        "timeControl": {
+          "type": "string",
+          "maxLength": 96
+        },
+        "resultProvenance": {
+          "enum": [
+            "UNKNOWN",
+            "USER_REPORTED",
+            "AUTO_CHECKMATE",
+            "AUTO_STALEMATE",
+            "AUTO_DRAW"
+          ]
+        }
+      }
+    },
+    "startFen": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "moves": {
+      "type": "array",
+      "maxItems": 2000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ply",
+          "san",
+          "uci",
+          "beforeFen",
+          "afterFen",
+          "provenance",
+          "sourceRefs",
+          "observationRefs"
+        ],
+        "properties": {
+          "ply": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "san": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "uci": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 8
+          },
+          "beforeFen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "afterFen": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "provenance": {
+            "enum": [
+              "SHEET_DIRECT",
+              "SHEET_CONSTRAINED",
+              "USER_CORRECTED",
+              "USER_ENTERED",
+              "INFERRED_BRIDGE",
+              "UNRESOLVED"
+            ]
+          },
+          "sourceRefs": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 96,
+              "pattern": "^[A-Za-z0-9._-]+$"
+            }
+          },
+          "observationRefs": {
+            "type": "array",
+            "maxItems": 8,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 13,
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9._-]{8,96}:[A-Za-z0-9._-]{4,96}$"
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 20000
+    },
+    "certification": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assertionVersion",
+            "recordRevision",
+            "sourceRevision",
+            "canonicalHash",
+            "observationRoot",
+            "certifiedAt",
+            "assertion",
+            "recordType"
+          ],
+          "properties": {
+            "assertionVersion": {
+              "const": "record-certification/3"
+            },
+            "recordRevision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sourceRevision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "canonicalHash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "observationRoot": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "certifiedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "assertion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "recordType": {
+              "enum": [
+                "PLAYED_GAME",
+                "FORFEIT",
+                "BYE",
+                "ABANDONED_BEFORE_MOVE"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "flags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "needsReview"
+      ],
+      "properties": {
+        "needsReview": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
