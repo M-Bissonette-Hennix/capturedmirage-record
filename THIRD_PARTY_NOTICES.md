@@ -1,4 +1,4 @@
-# Third-Party Notices — RECORD 0.3.2
+# Third-Party Notices — RECORD 0.3.3
 
 RECORD's shipped PWA contains **no third-party JavaScript runtime dependency graph**. Browser CI installs Playwright only in GitHub Actions and does not ship it in the deployed PWA.
 

@@ -8,8 +8,8 @@ const SOURCE_ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'
 const REPO_ROOT=String.raw`C:\Users\ux5t9\Documents\CAPTUREDMIRAGE\CAPTUREDMIRAGE-RECORD_app\RECORD-0.3.0`;
 const FULL_REPO='M-Bissonette-Hennix/capturedmirage-record';
 const REMOTE_URL='https://github.com/M-Bissonette-Hennix/capturedmirage-record.git';
-const EXPECTED_BASE='bb9bd2a842f0aa416ebe2a7982b9117b1fe34b0a';
-const TARGET_VERSION='0.3.2';
+const EXPECTED_BASE='83723cb0178a2c1fab5b021ba2ff4783c68ad332';
+const TARGET_VERSION='0.3.3';
 const WORKFLOW_NAME='RECORD QA + Pages';
 
 function out(s=''){process.stdout.write(`${s}\n`);}
@@ -66,14 +66,14 @@ async function walkFiles(dir,{ignore=new Set()}={}){
 }
 function relUnix(base,p){return path.relative(base,p).split(path.sep).join('/');}
 async function verifyReleaseTree(){
-  heading('VERIFYING EXTRACTED RECORD 0.3.2 RELEASE');
+  heading('VERIFYING EXTRACTED RECORD 0.3.3 RELEASE');
   const pkg=JSON.parse(await fs.readFile(path.join(SOURCE_ROOT,'package.json'),'utf8'));
   if(pkg.version!==TARGET_VERSION)die(`Expected package version ${TARGET_VERSION}; found ${pkg.version}.`);
 
   const manifestPath=path.join(SOURCE_ROOT,'RELEASE_MANIFEST.json');
   const manifest=JSON.parse(await fs.readFile(manifestPath,'utf8'));
   if(manifest.schema!=='record-release-manifest/3')die('Unsupported release manifest schema.');
-  if(!String(manifest.release||'').includes(`RECORD ${TARGET_VERSION}`))die('Release manifest does not identify RECORD 0.3.2.');
+  if(!String(manifest.release||'').includes(`RECORD ${TARGET_VERSION}`))die('Release manifest does not identify RECORD 0.3.3.');
 
   const expected=new Map();
   for(const row of manifest.files||[]){
@@ -106,7 +106,7 @@ async function verifyReleaseTree(){
 }
 
 async function copyReleaseIntoRepo(){
-  heading('REPLACING WORKING TREE WITH VERIFIED RECORD 0.3.2 SOURCE');
+  heading('REPLACING WORKING TREE WITH VERIFIED RECORD 0.3.3 SOURCE');
   for(const ent of await fs.readdir(REPO_ROOT,{withFileTypes:true})){
     if(ent.name==='.git')continue;
     await fs.rm(path.join(REPO_ROOT,ent.name),{recursive:true,force:true});
@@ -207,11 +207,11 @@ async function main(){
         `Expected: ${EXPECTED_BASE}\nLocal:    ${localBase}\nRemote:   ${remoteBase}`);
   }
 
-  out(`[PASS] Local and GitHub main are exact RECORD 0.3.1 predecessor ${EXPECTED_BASE}.`);
+  out(`[PASS] Local and GitHub main are exact RECORD 0.3.2 predecessor ${EXPECTED_BASE}.`);
 
   await copyReleaseIntoRepo();
 
-  heading('LOCAL RECORD 0.3.2 QA');
+  heading('LOCAL RECORD 0.3.3 QA');
   // Invoke Node entry points directly. This intentionally avoids Windows
   // .cmd/shell parsing entirely; GitHub CI independently exercises npm scripts.
   run('node',['scripts/syntax-check.mjs']);
@@ -221,26 +221,39 @@ async function main(){
   run('node',['scripts/build.mjs']);
   run('node',['scripts/dist-qa.mjs']);
   run('node',['scripts/verify-release.mjs']);
-  run('git',['diff','--check']);
+  // The archived 0.2 hostile-audit TXT is an immutable evidentiary input.
+  // Its exact bytes are already verified by RELEASE_MANIFEST.json and by
+  // config/release.json's hostileAudit SHA-256. Exclude only that path from
+  // whitespace lint; all executable/source/deployment files remain covered.
+  const auditRel='audits/RECORD_v0.2.0_hostile_audit.txt';
+  const release=JSON.parse(await fs.readFile(path.join(REPO_ROOT,'config','release.json'),'utf8'));
+  const expectedAuditSha=String(release?.hostileAudit?.sha256||'').toLowerCase();
+  const actualAuditSha=await hashFile(path.join(REPO_ROOT,...auditRel.split('/')));
+  if(!expectedAuditSha||actualAuditSha!==expectedAuditSha)die('Archived hostile-audit SHA mismatch before whitespace exception.',`Expected: ${expectedAuditSha||'(missing)'}\nActual:   ${actualAuditSha}`);
+  out(`[PASS] Archived hostile audit exact SHA-256: ${actualAuditSha}`);
+  const diffCheck=run('git',['-c','core.pager=cat','diff','--check','--','.',`:(exclude)${auditRel}`],{capture:true,allowFailure:true});
+  if(diffCheck.code!==0)die('git diff --check found whitespace defects outside the immutable archived audit.',`${diffCheck.stdout}\n${diffCheck.stderr}`.trim());
   out('[PASS] Complete local deterministic/build/distribution gates.');
 
-  heading('COMMITTING AND PUSHING RECORD 0.3.2');
+  heading('COMMITTING AND PUSHING RECORD 0.3.3');
   run('git',['add','--all']);
+  const stagedCheck=run('git',['-c','core.pager=cat','diff','--cached','--check','--','.',`:(exclude)${auditRel}`],{capture:true,allowFailure:true});
+  if(stagedCheck.code!==0)die('Staged diff contains whitespace defects outside the immutable archived audit.',`${stagedCheck.stdout}\n${stagedCheck.stderr}`.trim());
   const staged=run('git',['diff','--cached','--name-only'],{capture:true}).stdout;
-  if(!staged)die('No RECORD 0.3.2 changes are staged.');
+  if(!staged)die('No RECORD 0.3.3 changes are staged.');
   out('Staged paths:');
   out(staged);
 
-  run('git',['commit','-m','RECORD 0.3.2 - BROWSER PORTABILITY']);
+  run('git',['commit','-m','RECORD 0.3.3 - BROWSER DIAGNOSTIC CONSISTENCY']);
   const commit=run('git',['rev-parse','HEAD'],{capture:true}).stdout;
-  out(`[PASS] Local 0.3.2 commit: ${commit}`);
+  out(`[PASS] Local 0.3.3 commit: ${commit}`);
 
   run('git',['push','origin','main']);
   const remoteAfterLine=run('git',['ls-remote','origin','refs/heads/main'],{capture:true}).stdout;
   const remoteAfter=(remoteAfterLine.split(/\s+/)[0]||'').trim();
-  if(remoteAfter!==commit)die('GitHub main did not converge to local 0.3.2 commit.',
+  if(remoteAfter!==commit)die('GitHub main did not converge to local 0.3.3 commit.',
       `Local: ${commit}\nRemote: ${remoteAfter}`);
-  out('[PASS] GitHub main exactly matches local 0.3.2 commit.');
+  out('[PASS] GitHub main exactly matches local 0.3.3 commit.');
 
   heading('VERIFYING GITHUB PAGES CONFIGURATION');
   let pages=await ghApi(`repos/${FULL_REPO}/pages`);
@@ -283,8 +296,8 @@ async function main(){
 
   const cfgResponse=await fetchWithTimeout(new URL('src/config.js',pagesUrl).href);
   const cfgText=await cfgResponse.text();
-  if(!/version:\s*'0\.3\.2'/.test(cfgText))die('Public src/config.js does not identify RECORD 0.3.2.');
-  out('[PASS] Public runtime identifies RECORD 0.3.2.');
+  if(!/version:\s*'0\.3\.3'/.test(cfgText))die('Public src/config.js does not identify RECORD 0.3.3.');
+  out('[PASS] Public runtime identifies RECORD 0.3.3.');
 
   const runtimeResponse=await fetchWithTimeout(new URL('config/runtime.json',pagesUrl).href);
   const runtime=await runtimeResponse.json();
@@ -293,7 +306,7 @@ async function main(){
   out('[PASS] Remote recognition disabled.');
   out('[PASS] Fixture recognition profile confirmed.');
 
-  heading('RECORD 0.3.2 DEPLOYMENT COMPLETE');
+  heading('RECORD 0.3.3 DEPLOYMENT COMPLETE');
   out(`Commit : ${commit}`);
   out(`Actions: ${runUrl}`);
   out(`Live   : ${pagesUrl}`);

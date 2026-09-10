@@ -1,6 +1,6 @@
 {
   "name": "record-chess",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "description": "RECORD \u2014 local-first evidentiary ingress for physical chess games.",

@@ -12,3 +12,11 @@ test('browser migration harness uses a same-origin HTML seed and explicit Indexe
   assert.match(p,/tx\.oncomplete=\(\)=>resolve\(\)/);
   assert.match(p,/legacy seed failed:/);
 });
+
+test('browser diagnostics consume the one expected needsReview rejection without suppressing unexpected errors',()=>{
+  const p=fs.readFileSync('tests/browser/playwright.mjs','utf8');
+  assert.match(p,/consumeExpected\(/);
+  assert.match(p,/REC-CERT-006 recertification rejection/);
+  assert.match(p,/console\\\.error: RecordError: Record is explicitly marked as needing review/);
+  assert.match(p,/diagnostics\.assertClean\(\)/);
+});

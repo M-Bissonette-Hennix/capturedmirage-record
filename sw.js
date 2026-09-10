@@ -1,6 +1,6 @@
 importScripts('./precache-manifest.js');
 const PREFIX='record::';
-const CACHE='record::shell::0.3.2';
+const CACHE='record::shell::0.3.3';
 const KEEP=new Set([CACHE]);
 const SHELL=(self.RECORD_PRECACHE||[]).map(x=>x.url);
 self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(SHELL);})())});

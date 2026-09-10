@@ -1,7 +1,7 @@
 {
   "schema": "record-release-manifest/3",
-  "release": "RECORD 0.3.2 RECONSTRUCTION / INTEGRITY — BROWSER PORTABILITY",
-  "releasedAt": "2026-09-10T12:30:00.000Z",
+  "release": "RECORD 0.3.3 RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY",
+  "releasedAt": "2026-09-10T12:48:00.000Z",
   "sourceRelease": {
     "name": "RECORD-0.2.0-VISION-INTEGRITY(2).zip",
     "sha256": "c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c"
@@ -30,7 +30,7 @@
     {
       "path": "ARCHITECTURE.md",
       "size": 6760,
-      "sha256": "06bcac690b77919d9eedcafc4b64c30f0b815a54a8ba45780d4bc912c12cf60a"
+      "sha256": "701846692c606b7f156db1267b7c599de8a08d21db98d7372318eb958346a873"
     },
     {
       "path": "assets/branding/capturedmirage-logo.png",
@@ -125,7 +125,7 @@
     {
       "path": "AUDIT_STATUS.md",
       "size": 5308,
-      "sha256": "c1868b6acb2c49a67cb0e8899c06b68536d9ff4b809ca184a62d42d34aaec9bd"
+      "sha256": "c7eda6480ca411ed4fc079d9f97ff215a2c978948bf5803639735a842fedfb50"
     },
     {
       "path": "audits/RECORD_v0.2.0_hostile_audit.txt",
@@ -139,13 +139,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 7133,
-      "sha256": "f3492d20993bc27ce5d8e5427f03e4c92e99319ccc2a3c74417540db672e0ebd"
+      "size": 9038,
+      "sha256": "6bab84d05da8f1483f04c257a365392e4d4fd0636d0a7d6337c2987301217707"
     },
     {
       "path": "config/release.json",
-      "size": 578,
-      "sha256": "64838f90344a9728f0e145b2f84f77be36a6fbb7da6b6bb705e1b37268113602"
+      "size": 589,
+      "sha256": "86177952247b07f50f915811618bb69a8788ae93fa9ba045ee9e25d5a66c47ae"
     },
     {
       "path": "config/runtime.json",
@@ -155,7 +155,7 @@
     {
       "path": "DEVELOPMENT_BIBLE.md",
       "size": 3593,
-      "sha256": "9bb4915a8427ff2deb64ceba815f8c78b16a6b2ea02fb3d1981b66156d25708d"
+      "sha256": "ac14e1249c5b9da620856a947a75a6d04ed36de6fe8360198d1f9c54a68d693b"
     },
     {
       "path": "dist/app.js",
@@ -295,7 +295,7 @@
     {
       "path": "dist/precache-manifest.js",
       "size": 4918,
-      "sha256": "274007cf661215c85ad0f62a238c815a2d57dd889d3c0b3c93e952ddc741f43b"
+      "sha256": "cf030a118a18f0a4ae9c018ade420d82971a90bfa5407e223c3914b406a882ed"
     },
     {
       "path": "dist/src/backup.js",
@@ -315,7 +315,7 @@
     {
       "path": "dist/src/config.js",
       "size": 3580,
-      "sha256": "41839ecadca4cf7a4d53d5a17adf50d1cef88a41350d7327857d3118f529e78e"
+      "sha256": "d4b454e858d2d47ca618c8c9301befcb13c5ffc1053023e120daf94ddfe89233"
     },
     {
       "path": "dist/src/crypto.js",
@@ -380,7 +380,7 @@
     {
       "path": "dist/sw.js",
       "size": 1922,
-      "sha256": "a140a437152dc83507f4bc06a64e717205231571c7acc50bfdf5b4e833a30ea9"
+      "sha256": "396d29025d8e8e60bf3d7785f51c8cffa116479e9b7fc8347d338335f83c1a0a"
     },
     {
       "path": "fixtures/browser-seed.html",
@@ -420,7 +420,7 @@
     {
       "path": "gateway/README.md",
       "size": 2739,
-      "sha256": "fed429cb04c7d8cf8232aaf9d40467297b3a494d200b2e819ea6948bf4587530"
+      "sha256": "025a57cc8fdbc7e3ed29778d5d2633681738b4a3d8eba6e51a7e1553130eaf2a"
     },
     {
       "path": "gateway/security-do.js",
@@ -430,7 +430,7 @@
     {
       "path": "gateway/worker.js",
       "size": 9112,
-      "sha256": "ce752c6dad3958880dd91ddd5a70dc1aa4f7f7b0d8a2a53940b95ab0671c4239"
+      "sha256": "f7b53517636d469368ebd9a3317648799aab08a56cc28262cdfc7ce4a27819c6"
     },
     {
       "path": "index.html",
@@ -455,37 +455,37 @@
     {
       "path": "package-lock.json",
       "size": 261,
-      "sha256": "fdc94ddc6051959558cd55c17751224b0e7c97c47cce3455ec36c826adf280fb"
+      "sha256": "6ce69d395509bb38dd87146bb18ae648c8e0f4191f5a8a3f8ff2373846b17012"
     },
     {
       "path": "package.json",
       "size": 967,
-      "sha256": "64862d1074ec16044e1400341c255725611e7d6d7520cba93fbc894b87d78944"
+      "sha256": "892f21c6fd79e1623ff88ac2ef50d6b36ffdd92e7f38e5e4819082d5e7c5d7b0"
     },
     {
       "path": "PHYSICAL_IPHONE_QA.md",
       "size": 2827,
-      "sha256": "ff615993d8dc3fabbcd91f6c989eab75cb15bdfb9c7e83c3b4745063b464ff76"
+      "sha256": "99fa1bd9875b7a74a4842f3a82086a6adb61f59c637d500b459abb5dddba8260"
     },
     {
       "path": "PRIVACY_MODEL.md",
       "size": 2059,
-      "sha256": "c075356115b2813e5501169522b93320e87995f57961f01f5e22979cc4d68d51"
+      "sha256": "580d35df9381fad0e679d69e1765b556be5bec529d3f70d0689d20248e096151"
     },
     {
       "path": "QA.md",
       "size": 3011,
-      "sha256": "a2359e51d2d9bd8f5976f8ff28a582e9ebc3e666d7fe177ee52be0248dd2e69c"
+      "sha256": "42d4eca12ed38407321f9452fe2296c404c964cc25ab9b6cb62213c7f8933cd7"
     },
     {
       "path": "README.md",
-      "size": 6960,
-      "sha256": "2ef94d1e47e96516871208909d8387fcd208dfb37d1f245867a6ea78ed7782ff"
+      "size": 7158,
+      "sha256": "fa665efddbc2d84b7b96c3026cd19c5d17ac1e66326634030013bba897c7195d"
     },
     {
       "path": "RECOGNITION_SPEC.md",
       "size": 3514,
-      "sha256": "3c6070442462b9531553d02e2cea4be5872b56522695001e0e22ed344aa0a955"
+      "sha256": "f5b5cd892ff5112d38e2350a420d303d004ebb5377231aa7720ac9f3a2439040"
     },
     {
       "path": "RECORD_CAPSULE_SPEC.md",
@@ -494,8 +494,8 @@
     },
     {
       "path": "RELEASE_QA.md",
-      "size": 6306,
-      "sha256": "7889dcc4f872d659ed5159f293d7affceff987d6b39626fe86414ca1e84a84c6"
+      "size": 4948,
+      "sha256": "337278159a9fb62c680c664df02e0dddc828db4b8969c824192dc2a93238261b"
     },
     {
       "path": "schema/audit-event.schema.json",
@@ -610,7 +610,7 @@
     {
       "path": "src/config.js",
       "size": 3580,
-      "sha256": "41839ecadca4cf7a4d53d5a17adf50d1cef88a41350d7327857d3118f529e78e"
+      "sha256": "d4b454e858d2d47ca618c8c9301befcb13c5ffc1053023e120daf94ddfe89233"
     },
     {
       "path": "src/crypto.js",
@@ -675,7 +675,7 @@
     {
       "path": "sw.js",
       "size": 1922,
-      "sha256": "a140a437152dc83507f4bc06a64e717205231571c7acc50bfdf5b4e833a30ea9"
+      "sha256": "396d29025d8e8e60bf3d7785f51c8cffa116479e9b7fc8347d338335f83c1a0a"
     },
     {
       "path": "tests/backup.test.mjs",
@@ -684,13 +684,13 @@
     },
     {
       "path": "tests/browser/playwright.mjs",
-      "size": 10839,
-      "sha256": "2be7de6d6642a595e9bc8c3979838b8e458b0c89aa4d23a6fdd02c91cf3a6d1b"
+      "size": 11518,
+      "sha256": "c74253a0bf8be585fdcc4762345db4073c5fb68ed6e73dd5a9ac8d61a89768c9"
     },
     {
       "path": "tests/capsule.test.mjs",
       "size": 6884,
-      "sha256": "2809cf43e50aa7304d5ae06f3bdaba1a5bfc9a8ffde4af7f29bc10c275ea5eaf"
+      "sha256": "e8c7a3ede3c8240f0ac8aece449493f99283947dec92cdb22d84dd1dad98403b"
     },
     {
       "path": "tests/chess.test.mjs",
@@ -729,8 +729,8 @@
     },
     {
       "path": "tests/static.test.mjs",
-      "size": 1141,
-      "sha256": "94db80b7b5b59a6c8514c4888f2d335dfcb9796e831d4783d01e7173536a44f8"
+      "size": 1577,
+      "sha256": "b61e4c4a1690e46549eda995c7f587d15e940e902dcfd71be04e03acea98492d"
     },
     {
       "path": "tests/zip.test.mjs",
@@ -740,17 +740,17 @@
     {
       "path": "THIRD_PARTY_NOTICES.md",
       "size": 1224,
-      "sha256": "7edfb8e5dcb45aacca521ad562aa7a5047f2a4fbb6876ca9c06e4aa8ee99a691"
+      "sha256": "de5084a235e45d4e1c8a67177367c945862f88428494b176a2de180f0b80d887"
     },
     {
       "path": "THREAT_MODEL.md",
       "size": 3133,
-      "sha256": "4a55e7b899e5dd17601d0a63fd7db05be8e224892b77c549bdd49e5c68c074dc"
+      "sha256": "d604d3ccac2d79e16ebe375f3486e8a4b9a7376fcddd196015de52b6ddb30de4"
     },
     {
       "path": "tools/deploy-github.mjs",
-      "size": 13303,
-      "sha256": "8eff85498bee59d53d83a560b8b9267af67768e108aa0c861a12711afa2fc19c"
+      "size": 14802,
+      "sha256": "df7744a6a26904a5bdd51c9974f4e4eeb09cadd39c264b5381e2c4541ac8d502"
     },
     {
       "path": "tools/verify-backup.mjs",

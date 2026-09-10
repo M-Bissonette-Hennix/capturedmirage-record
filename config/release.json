@@ -1,8 +1,8 @@
 {
   "product": "RECORD",
-  "version": "0.3.2",
-  "release": "RECONSTRUCTION / INTEGRITY — BROWSER PORTABILITY",
-  "releasedAt": "2026-09-10T12:30:00.000Z",
+  "version": "0.3.3",
+  "release": "RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY",
+  "releasedAt": "2026-09-10T12:48:00.000Z",
   "sourceRelease": {
     "name": "RECORD-0.2.0-VISION-INTEGRITY(2).zip",
     "sha256": "c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c"

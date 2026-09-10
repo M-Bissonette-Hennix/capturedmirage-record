@@ -1,98 +1,72 @@
-# RECORD 0.3.2 — RECONSTRUCTION / INTEGRITY — BROWSER PORTABILITY
+# RECORD 0.3.3 — RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY
 ## Release QA Receipt
 
 Release date: 2026-09-10
 
-This receipt records evidence actually produced against the final 0.3.2 source tree and explicitly separates that evidence from browser/device/infrastructure work that still requires execution outside this build container.
+This receipt records evidence actually produced against the final 0.3.3 source tree and keeps hosted-browser/device/infrastructure claims separate until they are executed against the exact pushed commit.
 
 ## Inputs
 
-- Source lineage: RECORD 0.3.1 commit `bb9bd2a842f0aa416ebe2a7982b9117b1fe34b0a`.
+- Immediate predecessor: RECORD 0.3.2 commit `83723cb0178a2c1fab5b021ba2ff4783c68ad332`.
 - Original 0.2 source release: `RECORD-0.2.0-VISION-INTEGRITY(2).zip`.
 - Original 0.2 source release SHA-256: `c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c`.
 - Controlling hostile audit: `RECORD_v0.2.0_hostile_audit.txt`.
+- Controlling hostile-audit SHA-256: `23f31eea522ba68dec312d11580a4c4b91faa0133de38f72ba1fff7ef65f304a`.
 - Canonical CAPTUREDMIRAGE logo SHA-256: `df4f56b3ca47981e0202e433fe275bf15328ca58177599b3ba62a99cd796c8e6`.
+
+## 0.3.2 hosted evidence that controls this correction
+
+GitHub Actions run `34478353081` against exact 0.3.2 commit `83723cb0178a2c1fab5b021ba2ff4783c68ad332` produced:
+
+- Chromium actual `record-foundation` v1 → `record-chess` v3 browser migration: **PASS**.
+- Chromium functional flow reached successful initial certification, then `MARK UNREADABLE`, then the intended failed recertification path.
+- RECORD correctly emitted the user-visible `REC-CERT-006: Record is explicitly marked as needing review.` rejection.
+- RECORD also intentionally logged that domain rejection through `console.error` in the central error reporter.
+- The browser harness then failed because its global diagnostics collector treated that already-expected `console.error` as an unexpected browser error.
+- WebKit was **NOT REACHED** because Chromium's harness assertion terminated the loop first.
+
+This is a test-oracle/diagnostic-classification defect. It is not evidence that RECORD allowed recertification or violated the `needsReview` certification barrier.
+
+## 0.3.3 correction
+
+The Playwright harness now:
+
+1. independently waits for the exact `REC-CERT-006` status/toast after the deliberate recertification attempt;
+2. waits a bounded interval for the corresponding browser console event;
+3. consumes exactly one console diagnostic matching `RecordError: Record is explicitly marked as needing review.`;
+4. fails if the expected diagnostic never appears;
+5. retains every unmatched error in the diagnostics buffer;
+6. still calls `diagnostics.assertClean()` before closing each migration/functional browser context;
+7. therefore still fails on any unexpected console error, page error, extra duplicate error, or unrelated failure.
+
+The application certification semantics are unchanged.
+
+The deployment commissioner is additionally corrected so the immutable archived hostile-audit TXT is first SHA-verified against `config/release.json` and is then the **only** path excluded from Git whitespace lint. Its CRLF bytes are preserved rather than silently rewritten for cosmetic Git output.
 
 ## Mechanical source gates
 
-- JavaScript syntax: **PASS — 34 / 34 files**.
-- JSON schema parse/self-test: **PASS**.
-- Static/security QA: **PASS**.
-- Deterministic Node test suite: **PASS — 60 / 60**.
-- Allowlisted `dist/` build: **PASS**.
-- Content-addressed `dist/` verification: **PASS**.
-- Generated precache coverage: **PASS — 44 / 44 runtime files verified**.
-- Release manifest descriptor verification: **PASS — 150 / 150 files**.
-- Embedded Node deployment commissioner package self-verification: **PASS — 150 / 150 descriptors**.
-- npm package audit for shipped source dependency graph: **0 vulnerabilities**.
+The final 0.3.3 source tree produced:
 
-The 60-test deterministic suite includes the 59 integrity/reconstruction regressions already present in 0.3.1 plus a new browser-harness portability regression requiring a same-origin HTML IndexedDB seed context and explicit IndexedDB transaction completion semantics.
+- JavaScript syntax: **PASS — 34 / 34 files**;
+- JSON schema self-test: **PASS**;
+- static/security QA: **PASS**;
+- deterministic Node suite: **PASS — 61 / 61 tests**;
+- allowlisted `dist/` build: **PASS**;
+- content-addressed `dist/` verification: **PASS — 44 / 44 runtime files**;
+- browser-diagnostics regression: **PASS** — expected `REC-CERT-006` console diagnostic must be consumed exactly while unmatched errors remain fatal;
+- deployment commissioner: **PASS** under package-verification mode;
+- independent Stockfish differential: **PASS — depth 1 200 / 200; depth 2 30 / 30; seed `0x5eed1234`**.
 
-## Hostile-audit closure gates retained
+- release-manifest descriptor verification: **PASS — 150 / 150 files**.
 
-The suite continues to cover, among other controls:
-
-- zero-move `PLAYED_GAME` certification rejection;
-- `needsReview` certification rejection;
-- stale certification failure;
-- dangling and wrong-coordinate recognition observation references;
-- exact observation page/hash/move-number/side binding;
-- semantic PGN ↔ canonical `record.json` mismatch rejection even after manifest rebuild;
-- derived-asset byte mutation rejection before Capsule export;
-- signed remote observation verification against a trusted gateway key;
-- one-use bootstrap capability and registered-device overwrite rejection;
-- binary request signature/body-digest binding;
-- exact-retry idempotency and deliberate-rerun separation;
-- device-namespaced/full-binding idempotency coordination;
-- source signature sniffing and animated-WebP rejection;
-- actual v0.1 game-shape transformation without invented certification;
-- legal reconstruction beam, inferred-bridge review requirement, fail-closed impossible continuation, and manual-prefix preservation;
-- single canonical move ledger and deterministic downstream rebuild;
-- source mutation certification invalidation;
-- phantom-en-passant repetition-key correction;
-- service-worker namespace isolation;
-- SHA-pinned GitHub Actions;
-- ZIP traversal, duplicate-path and CRC-tamper rejection.
-
-## Independent chess oracle differential
-
-The underlying 0.3 chess engine is unchanged from the 0.3.1 mechanical freeze. The supplied Stockfish AVX2 oracle was rerun against this final 0.3.2 source tree and produced:
-
-- perft depth 1: **PASS — 200 / 200 positions exact match**;
-- perft depth 2: **PASS — 30 / 30 positions exact match**;
-- deterministic seed: `0x5eed1234`.
-
-This is independent evidence for legal-move generation, not a proof of every possible chess state.
-
-## Hosted-browser evidence before 0.3.2
-
-GitHub Actions run `34474562019`, against exact 0.3.1 commit `bb9bd2a842f0aa416ebe2a7982b9117b1fe34b0a`, produced:
-
-- Chromium actual `record-foundation` v1 → `record-chess` v3 browser migration: **PASS**.
-- Chromium functional/certification/offline workflow: **PASS**.
-- WebKit migration harness: **DID NOT COMPLETE**. The failure occurred inside the pre-migration `seedLegacy()` `page.evaluate` call and surfaced as `page.evaluate: null`.
-
-The 0.3.1 harness had established origin by navigating to a JSON resource before opening/storing the legacy IndexedDB fixture. Because the failure occurred while constructing the fixture, before the application migration route could be exercised, it is not legitimate to classify the WebKit application migration itself as either PASS or FAIL from that run.
-
-## 0.3.2 browser-portability correction
-
-The 0.3.2 harness now:
-
-1. navigates to a dedicated same-origin HTML fixture before touching IndexedDB;
-2. loads/hash-verifies source fixture bytes in Node rather than depending on page-context fetch/WebCrypto during seed construction;
-3. passes only serializable bounded values into `page.evaluate`;
-4. uses explicit success/error/abort/blocked IndexedDB handlers;
-5. reads the historical game/source back before closing the legacy DB;
-6. after application migration, reads v3 game/source objects back from IndexedDB and checks source SHA/Blob size;
-7. converts seed failures into structured diagnostic errors rather than an opaque `null`;
-8. guarantees browser cleanup via `finally`.
+Clean-extraction verification and the canonical ZIP SHA-256 are produced during final sealing and must match the distributed artifacts.
 
 ## External commissioning boundary
 
-The following remain **PENDING EXTERNAL** until executed against the exact 0.3.2 commit:
+The following remain **PENDING EXTERNAL** until executed against the exact 0.3.3 commit:
 
-1. GitHub-hosted Chromium browser workflow.
-2. GitHub-hosted WebKit browser workflow.
+1. GitHub-hosted Chromium full workflow.
+2. GitHub-hosted WebKit full workflow.
 3. GitHub Pages deployment and public-runtime verification.
 4. Physical iPhone Safari + Add to Home Screen matrix.
 5. Physical iPhone camera/Photos/Files permission paths.
@@ -105,6 +79,6 @@ The following remain **PENDING EXTERNAL** until executed against the exact 0.3.2
 
 ## Release disposition
 
-**SOURCE / DISTRIBUTION FREEZE: PASS SUBJECT TO EXACT 0.3.2 HOSTED-BROWSER AND DEVICE COMMISSIONING.**
+**SOURCE / DISTRIBUTION FREEZE: PASS SUBJECT TO EXACT 0.3.3 HOSTED-BROWSER AND DEVICE COMMISSIONING.**
 
-The source package is eligible to be pushed as RECORD 0.3.2 — RECONSTRUCTION / INTEGRITY — BROWSER PORTABILITY. It must not be described as WebKit-commissioned, physically iPhone-commissioned, real-provider-commissioned, or tournament-frozen until those gates have actually passed.
+0.3.3 must not be described as WebKit-commissioned, physically iPhone-commissioned, real-provider-commissioned, or tournament-frozen until those gates actually pass.

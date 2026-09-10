@@ -13,8 +13,19 @@ function wireDiagnostics(page,name,phase){
   const errors=[];
   page.on('pageerror',e=>errors.push(`pageerror: ${e?.message||String(e)}`));
   page.on('console',m=>{if(m.type()==='error')errors.push(`console.error: ${m.text()}`);});
-  return ()=>{
-    if(errors.length)throw new Error(`${name} ${phase} emitted browser errors:\n${errors.join('\n')}`);
+  return {
+    async consumeExpected(pattern,label='expected browser error',timeoutMs=2000){
+      const deadline=Date.now()+timeoutMs;
+      while(Date.now()<=deadline){
+        const index=errors.findIndex(text=>pattern.test(text));
+        if(index>=0){errors.splice(index,1);return;}
+        await new Promise(resolve=>setTimeout(resolve,10));
+      }
+      throw new Error(`${name} ${phase} did not emit ${label}. Captured errors:\n${errors.join('\n')||'(none)'}`);
+    },
+    assertClean(){
+      if(errors.length)throw new Error(`${name} ${phase} emitted unexpected browser errors:\n${errors.join('\n')}`);
+    }
   };
 }
 
@@ -170,7 +181,7 @@ async function migrationGate(type,name){
   try{
     const context=await browser.newContext();
     const page=await context.newPage();
-    const assertNoBrowserErrors=wireDiagnostics(page,name,'migration');
+    const diagnostics=wireDiagnostics(page,name,'migration');
     await seedLegacy(page,name);
     await page.goto(`${ORIGIN}/`,{waitUntil:'networkidle'});
     await page.getByRole('button',{name:'LIBRARY'}).click();
@@ -179,7 +190,7 @@ async function migrationGate(type,name){
     await page.getByRole('button',{name:/Legacy Browser Fixture/}).click();
     await page.getByText(/CERTIFICATION INVALIDATED|READY_FOR_REVIEW/).first().waitFor();
     await verifyMigratedEvidence(page,name);
-    assertNoBrowserErrors();
+    diagnostics.assertClean();
     await context.close();
   }finally{
     await browser.close();
@@ -192,7 +203,7 @@ async function appGate(type,name){
   try{
     const context=await browser.newContext({acceptDownloads:true});
     const page=await context.newPage();
-    const assertNoBrowserErrors=wireDiagnostics(page,name,'functional');
+    const diagnostics=wireDiagnostics(page,name,'functional');
     await page.goto(`${ORIGIN}/`,{waitUntil:'networkidle'});
     await page.getByRole('button',{name:/NEW RECORD/}).click();
     await page.locator('input[type=file]').setInputFiles('fixtures/recognition/clean-fixture-001/source.png');
@@ -211,6 +222,10 @@ async function appGate(type,name){
     await page.getByText(/Certification status: INVALIDATED/).waitFor();
     await page.getByRole('button',{name:'CERTIFY CURRENT RECORD'}).click();
     await page.getByRole('status').filter({hasText:/REC-CERT-006: Record is explicitly marked as needing review\./}).waitFor();
+    await diagnostics.consumeExpected(
+      /^console\.error: RecordError: Record is explicitly marked as needing review\.$/,
+      'the expected REC-CERT-006 recertification rejection'
+    );
     await page.reload({waitUntil:'networkidle'});
     await page.getByRole('button',{name:'LIBRARY'}).click();
     await page.getByText(/1 plies/).waitFor();
@@ -219,7 +234,7 @@ async function appGate(type,name){
     await page.reload({waitUntil:'domcontentloaded'});
     await page.getByText('RECORD',{exact:true}).first().waitFor();
     await context.setOffline(false);
-    assertNoBrowserErrors();
+    diagnostics.assertClean();
     await context.close();
   }finally{
     await browser.close();

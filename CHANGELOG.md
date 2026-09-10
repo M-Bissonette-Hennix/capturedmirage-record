@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 0.3.3 — BROWSER DIAGNOSTIC CONSISTENCY — 2026-09-10
+
+### Hosted-browser commissioning correction
+
+- Preserved RECORD application behavior and the 0.3.2 WebKit-seeding portability correction unchanged.
+- Corrected the browser harness so the deliberate `REC-CERT-006` recertification rejection is treated as an **expected domain-level console error** after the test explicitly proves the user-visible rejection toast.
+- The harness consumes exactly one matching `console.error` entry and still fails closed on every unexpected browser error, page error, missing expected rejection, or duplicate unexpected diagnostic.
+- Added a bounded wait for the expected console event so Playwright event delivery cannot race the toast assertion.
+- Added deterministic static regression coverage requiring the expected-error consumption path while retaining final `diagnostics.assertClean()` checks.
+- Updated the deployment commissioner to preserve the exact archived hostile-audit bytes while excluding only that SHA-verified archival file from Git whitespace lint.
+- Rotated the PWA shell cache namespace and release identity to 0.3.3.
+
+### Commissioning evidence inherited from 0.3.2 hosted run
+
+GitHub Actions run `34478353081` against exact 0.3.2 commit `83723cb0178a2c1fab5b021ba2ff4783c68ad332` established:
+- Chromium actual v0.1→v0.3 browser migration: **PASS**.
+- Chromium reached and correctly executed the functional certification path, including the deliberate post-`MARK UNREADABLE` recertification rejection.
+- The run failed because the harness classified that intentional application `console.error` as an unexpected browser error after already observing the correct `REC-CERT-006` UI behavior.
+- WebKit was therefore not reached in that run.
+
+0.3.3 corrects the test oracle, not the application certification semantics. The exact 0.3.3 Chromium/WebKit hosted run remains a deployment gate.
+
+
 ## 0.3.2 — BROWSER PORTABILITY — 2026-09-10
 
 ### Hosted-browser commissioning correction

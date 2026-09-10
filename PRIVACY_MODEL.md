@@ -1,4 +1,4 @@
-# Privacy Model — RECORD 0.3.2
+# Privacy Model — RECORD 0.3.3
 
 ## Local-first default
 

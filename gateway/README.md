@@ -1,4 +1,4 @@
-# RECORD 0.3.2 Recognition Gateway Reference
+# RECORD 0.3.3 Recognition Gateway Reference
 
 The gateway is commissioned separately from GitHub Pages. Do not enable remote recognition until RECORD is served from a dedicated HTTPS origin.
 
