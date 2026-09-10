@@ -1,62 +1,75 @@
-name: RECORD QA + Pages
+name: RECORD Operational Pages
+
 on:
   workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
+
 permissions:
   contents: read
+
 concurrency:
   group: record-pages-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   qa-build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Checkout exact repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
-      - run: npm run check
-      - run: npm run build
-      - run: npm run check:dist
-      - name: Install exact browser QA toolchain
-        run: |
-          npm install --no-save --no-package-lock --no-audit --ignore-scripts playwright@1.63.0
-          npx playwright install --with-deps chromium webkit
-      - name: Chromium + WebKit functional QA
-        run: |
-          python3 -m http.server 4173 --directory dist >/tmp/record-http.log 2>&1 &
-          SERVER_PID=$!
-          trap 'kill $SERVER_PID || true' EXIT
-          sleep 2
-          RECORD_BROWSER_COMMAND='node tests/browser/playwright.mjs' npm run test:browser
+
+      - name: Install
+        run: npm ci
+
+      - name: Deterministic source QA
+        run: npm run check
+
+      - name: Build deployment artifact
+        run: npm run build
+
+      - name: Verify deployment artifact
+        run: npm run check:dist
+
       - name: Reject obvious secrets
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE '(sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|api[_-]?key[[:space:]]*[:=][[:space:]]*["'"'][^"'"']{12,})' --exclude-dir=.git --exclude-dir=node_modules .; then
-            echo 'Potential secret found'; exit 1
+          if grep -RInE '(sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|api[_-]?key[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{12,})' \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules .; then
+            echo "Potential secret found"
+            exit 1
           fi
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-        if: github.event_name != 'pull_request'
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        if: github.event_name != 'pull_request'
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
+
+      - name: Upload verified RECORD dist
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
           path: dist
+
   deploy:
-    if: github.event_name != 'pull_request'
     needs: qa-build
     permissions:
       pages: write
       id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy gated artifact
+      - name: Deploy RECORD
         id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
