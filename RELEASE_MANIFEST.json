@@ -1,7 +1,7 @@
 {
   "schema": "record-release-manifest/3",
-  "release": "RECORD 0.3.0 RECONSTRUCTION / INTEGRITY",
-  "releasedAt": "2026-09-09T16:10:00.000Z",
+  "release": "RECORD 0.3.1 RECONSTRUCTION / INTEGRITY — BROWSER COMMISSIONING",
+  "releasedAt": "2026-09-10T11:30:00.000Z",
   "sourceRelease": {
     "name": "RECORD-0.2.0-VISION-INTEGRITY(2).zip",
     "sha256": "c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c"
@@ -14,13 +14,13 @@
   "files": [
     {
       "path": ".github/workflows/pages.yml",
-      "size": 2152,
-      "sha256": "b640ef158437d17cf2330d1077320a600c279a3ef3ce46acaa59e15d46c8b517"
+      "size": 2218,
+      "sha256": "e80d63ca299d887fca3700c0dd2f3657a4cb32ec43d02dc58152a40ed824d54f"
     },
     {
       "path": ".gitignore",
-      "size": 50,
-      "sha256": "da7e23705d6a1ef5813703ebeef3400dedd5f686a2ea6b3b7a3dc952716c0a19"
+      "size": 83,
+      "sha256": "71c39c11902e08c34c05c428b5d78742cd6045c3325687b6b62c9919e198019d"
     },
     {
       "path": "app.js",
@@ -30,7 +30,7 @@
     {
       "path": "ARCHITECTURE.md",
       "size": 6760,
-      "sha256": "ecd1e5f952362108eeec5844fd11992aa3e2930fb72e12d7e4341ad83eba11dd"
+      "sha256": "287d5ec51d28445f2b9c79d744c9e303ab59f71a60b37ba0a90676330cb0d5ef"
     },
     {
       "path": "assets/branding/capturedmirage-logo.png",
@@ -125,12 +125,12 @@
     {
       "path": "AUDIT_STATUS.md",
       "size": 5308,
-      "sha256": "ba505faf167104cff2834407c568727e942e1a17fe5a0c99db1e2175df0fafae"
+      "sha256": "59706bc9bc49afb2d0bec978aa4c429b30ddfec22906bc15f66b285bd6a8b871"
     },
     {
       "path": "audits/RECORD_v0.2.0_hostile_audit.txt",
-      "size": 59913,
-      "sha256": "23f31eea522ba68dec312d11580a4c4b91faa0133de38f72ba1fff7ef65f304a"
+      "size": 57565,
+      "sha256": "69806c76388d776782e07ed44e6e3a0ac4fd3d02c1c9417fdb6526ae877b9861"
     },
     {
       "path": "BRANDING.md",
@@ -139,13 +139,13 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 3861,
-      "sha256": "6fe14a6e39dc5a2f7f3342d2e88fd5717fc27397e1d424003ae7481e5f2bcb6b"
+      "size": 4936,
+      "sha256": "69899d76f4bdd233fbfb8a6607d2b057ea13db4bf26e935e0d48ec5e66705301"
     },
     {
       "path": "config/release.json",
-      "size": 554,
-      "sha256": "c358f0497cc335425c8f84ce4c566847b3f4092fa6a79d4ffa56c1b29f1dcc2c"
+      "size": 580,
+      "sha256": "2a0c525afb130c91655ca72ce6de609eb43668c58e9652b98d6643d4a34bc90e"
     },
     {
       "path": "config/runtime.json",
@@ -155,7 +155,7 @@
     {
       "path": "DEVELOPMENT_BIBLE.md",
       "size": 3593,
-      "sha256": "5115f0853573a81f310b9a1141638f22c72c08550ff13b0158e23552aa64616c"
+      "sha256": "c325dc675f5c7a715db2cccc5a4b505d762f818958f4fbe3190f7227a8717429"
     },
     {
       "path": "dist/app.js",
@@ -290,7 +290,7 @@
     {
       "path": "dist/precache-manifest.js",
       "size": 4803,
-      "sha256": "513283dfb8e08ed96b52310a67dff2aa6ddf5240fe6ef68d95222279d33537ac"
+      "sha256": "c0619a13a937fb728cc2653c8eb213dd6b090ff313fdb1252033127a544af24a"
     },
     {
       "path": "dist/src/backup.js",
@@ -310,7 +310,7 @@
     {
       "path": "dist/src/config.js",
       "size": 3580,
-      "sha256": "b03fe9eabc2ea7c7495bea977dcb9a115bf7986dec2bba5457275cbfd3dabc2e"
+      "sha256": "a9b25a42ba1d8517fd5e163918b03f2bf76a97e44b74fd9b3ae27c37f7cea60e"
     },
     {
       "path": "dist/src/crypto.js",
@@ -375,7 +375,7 @@
     {
       "path": "dist/sw.js",
       "size": 1922,
-      "sha256": "f854b73ce262991f3eb59731f35bce0828256816333c2dc2fdebe0a425a1c1d2"
+      "sha256": "f50fafa97b2e7c5b8cd32fd91c95fc000a53eaa013abc5f37c3652bd066be1f8"
     },
     {
       "path": "fixtures/example-game.json",
@@ -410,7 +410,7 @@
     {
       "path": "gateway/README.md",
       "size": 2739,
-      "sha256": "142c9acc16d6c44726600d0a778328e9746e266da107fe977b2b00d438992d27"
+      "sha256": "d49fb0990c4f912a2380aef2922df4a2f1034ea20ea4e28837c8475dae085e2e"
     },
     {
       "path": "gateway/security-do.js",
@@ -420,7 +420,7 @@
     {
       "path": "gateway/worker.js",
       "size": 9112,
-      "sha256": "d55633f4c6b6bc52f6ab3989b0e8337f9dfbd0604dc5cf0df1af674014bddfd0"
+      "sha256": "e62ae99d57287e2bed9ebc6419c0d69ef0cf2d342a7121d72d743781885497b9"
     },
     {
       "path": "index.html",
@@ -445,37 +445,37 @@
     {
       "path": "package-lock.json",
       "size": 261,
-      "sha256": "cfe40c04656a4bdb867d306dc8374b930618f9bf6f196fa4e19c11014aeb537d"
+      "sha256": "d4fcd97cd4c75a8e15772ea6775329330a12f6e875d605258aee211b0ecc2cc1"
     },
     {
       "path": "package.json",
-      "size": 1083,
-      "sha256": "d7510f9c75320fdba5f6cc4659b5b612e001225d1eb3720988706c99b1f3f078"
+      "size": 964,
+      "sha256": "fb51b530fe5e5e8ac9dbb1b68019447ba24735b051f642f68986fa968ebd0bda"
     },
     {
       "path": "PHYSICAL_IPHONE_QA.md",
       "size": 2827,
-      "sha256": "bdfc4eb0ec403f34ca8a0313a65def1dd70221ed28bb8ad5e27a5675f79b27ee"
+      "sha256": "06d4c1061a0cf0293973c3048f45fefe7613ab0f09041e08ec736db9ca8abe17"
     },
     {
       "path": "PRIVACY_MODEL.md",
       "size": 2059,
-      "sha256": "6b5a369a0f2481954e1392e4eae009f8f0184567333a8bfc1acd1b951e189990"
+      "sha256": "9e741a1d92fea27aea150ae4f8500f44db1ee731ef775846abe5dc795df284ba"
     },
     {
       "path": "QA.md",
       "size": 3011,
-      "sha256": "1e2cb650ac7f4dd175a1a1fdb55abba536becbf1052e3f6973ae678e7768fff5"
+      "sha256": "9df5e1014613392ba1a53a60ddea0efd564858ec4ea2244deb5f5036b4b8ffa8"
     },
     {
       "path": "README.md",
       "size": 6208,
-      "sha256": "3b489262a513fc4d2285d32d2f1b94ae6566a500bf318f86c8702efd05dba50c"
+      "sha256": "85e020cb2eb74c260967dd95a5888a65481f2adf212593b1fa681ccd7ea7dbf3"
     },
     {
       "path": "RECOGNITION_SPEC.md",
       "size": 3514,
-      "sha256": "a563c5f5f349aba8afd844ee059daafb449970e51687524647cc1d6ef92a1c82"
+      "sha256": "8d9da53a754e682f8cf0244d14223145fc6364d80facf33c5abcb7f9401462df"
     },
     {
       "path": "RECORD_CAPSULE_SPEC.md",
@@ -484,8 +484,8 @@
     },
     {
       "path": "RELEASE_QA.md",
-      "size": 4117,
-      "sha256": "cacd2ce70e46d9eaed4b468162f1e41722e020e60905f41ecfb962ef4d8835e0"
+      "size": 4590,
+      "sha256": "6863af29b3cf9d56f8e590503f6079bb667e1284eff5c0d92e22b82dcce1d1b8"
     },
     {
       "path": "schema/audit-event.schema.json",
@@ -568,6 +568,11 @@
       "sha256": "c7262148ad3e2a0454cf34602db6c5177b7eb6276b84762ca11c34e85c51e515"
     },
     {
+      "path": "scripts/syntax-check.mjs",
+      "size": 937,
+      "sha256": "09036a5abc23703ba0afdf0fa2f9c2dcbd2e6d324b6aaee28f25aad8e8b20b53"
+    },
+    {
       "path": "scripts/verify-release.mjs",
       "size": 1307,
       "sha256": "19aff5e806bd6f6a32c7ed3d043cff0854e9c7f37c48c2f4061def9b8aadcf02"
@@ -595,7 +600,7 @@
     {
       "path": "src/config.js",
       "size": 3580,
-      "sha256": "b03fe9eabc2ea7c7495bea977dcb9a115bf7986dec2bba5457275cbfd3dabc2e"
+      "sha256": "a9b25a42ba1d8517fd5e163918b03f2bf76a97e44b74fd9b3ae27c37f7cea60e"
     },
     {
       "path": "src/crypto.js",
@@ -660,7 +665,7 @@
     {
       "path": "sw.js",
       "size": 1922,
-      "sha256": "f854b73ce262991f3eb59731f35bce0828256816333c2dc2fdebe0a425a1c1d2"
+      "sha256": "f50fafa97b2e7c5b8cd32fd91c95fc000a53eaa013abc5f37c3652bd066be1f8"
     },
     {
       "path": "tests/backup.test.mjs",
@@ -669,13 +674,13 @@
     },
     {
       "path": "tests/browser/playwright.mjs",
-      "size": 4426,
-      "sha256": "c9a960013efdf130eda45dd5f3078afb0d719bbed95fa854657f467a27510edd"
+      "size": 4616,
+      "sha256": "3194ee83caa03c95f6dc3a562329dd762810558c313c0fba14a06baf7bc7fc41"
     },
     {
       "path": "tests/capsule.test.mjs",
       "size": 6884,
-      "sha256": "799085ad27c750d43234cb5f027bead568c341c1a0e813586238abcb18a8bfc3"
+      "sha256": "dace9c1ebfa1c284bff4edde41222d5a593a96348e3d8be74008d2b25e8fc35a"
     },
     {
       "path": "tests/chess.test.mjs",
@@ -725,12 +730,12 @@
     {
       "path": "THIRD_PARTY_NOTICES.md",
       "size": 1224,
-      "sha256": "a778d7dfa82e7c7cba2140eb193e9b09fd144c6c11e3205881e15141970c59fc"
+      "sha256": "36143748867bb72a9e605c0fcaa135194490b34791b36aae3bdba818b725cf89"
     },
     {
       "path": "THREAT_MODEL.md",
       "size": 3133,
-      "sha256": "182dcef6a2bd94b8a8cb65580ba04f772ac8de7a0f6cd18883aa01d62eda770c"
+      "sha256": "26b82b88fff4e370b2fb4499c55b1ecb367b24ad270c7ecba384ffdf70bb6063"
     },
     {
       "path": "tools/verify-backup.mjs",

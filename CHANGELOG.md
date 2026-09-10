@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.3.1 — BROWSER COMMISSIONING — 2026-09-10
+
+### Hosted-browser correction
+
+- Corrected the Playwright certification-state expectation discovered by the first GitHub-hosted Chromium run: evidence-bearing `MARK UNREADABLE` invalidates the prior certification, so the authoritative status is `INVALIDATED`, not `REVIEW_REQUIRED`.
+- Strengthened the browser gate to prove that immediate recertification fails closed with `REC-CERT-006` while `needsReview` remains set.
+- Preserved application certification semantics; no weakening was made to satisfy the test.
+
+### Release engineering
+
+- Replaced the POSIX-shell-only JavaScript syntax loop with a deterministic cross-platform Node syntax checker so `npm run check` works on Windows and Linux.
+- Updated the ephemeral browser QA dependency from Playwright 1.55.0 to 1.63.0.
+- Refreshed GitHub Actions to current SHA-pinned releases using Node-24-era action runtimes.
+- Prevented generated RECORD release ZIPs from being accidentally committed back into the source tree.
+- Rotated the PWA shell cache namespace to 0.3.1.
+
 ## 0.3.0 — RECONSTRUCTION / INTEGRITY — 2026-09-09
 
 ### Reconstruction

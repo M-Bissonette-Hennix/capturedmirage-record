@@ -1,9 +1,9 @@
-# RECORD 0.3.0 — RECONSTRUCTION / INTEGRITY
+# RECORD 0.3.1 — RECONSTRUCTION / INTEGRITY — BROWSER COMMISSIONING
 ## Release QA Receipt
 
-Release date: 2026-09-09
+Release date: 2026-09-10
 
-This receipt records evidence actually produced against the final 0.3.0 source tree. It does not convert infrastructure- or device-dependent commissioning work into fictitious PASS results.
+This receipt records evidence actually produced against the final 0.3.1 source tree. It does not convert infrastructure- or device-dependent commissioning work into fictitious PASS results.
 
 ## Inputs
 
@@ -62,7 +62,7 @@ This is independent evidence for legal-move generation. It is not a proof of eve
 
 ## Browser/device/infrastructure commissioning boundary
 
-The local environment does not provide the repository-hosted Playwright browser command required by `npm run test:browser`. The command therefore correctly exits without claiming a browser PASS.
+The predecessor 0.3.0 source was exercised by GitHub-hosted Chromium on 2026-09-10. The actual v0.1→v0.3 migration path passed, then the functional browser harness exposed a stale assertion: after `MARK UNREADABLE`, the application correctly invalidated the prior certification while the test incorrectly expected `REVIEW_REQUIRED`. 0.3.1 corrects the harness to require `INVALIDATED` and then verifies that recertification fails closed with `REC-CERT-006` while `needsReview` remains set. The 0.3.1 hosted Chromium/WebKit run remains an external deployment gate until that exact commit executes.
 
 The following remain **PENDING EXTERNAL** and are explicitly not release-manufactured PASS claims:
 
@@ -81,4 +81,4 @@ The following remain **PENDING EXTERNAL** and are explicitly not release-manufac
 
 **SOURCE / DISTRIBUTION FREEZE: PASS SUBJECT TO EXTERNAL COMMISSIONING BOUNDARY**
 
-The source package is eligible for release as RECORD 0.3.0 — RECONSTRUCTION / INTEGRITY. It must not be described as physically iPhone-commissioned, real-provider-commissioned, or tournament-frozen until the external matrix above has actually passed.
+The source package is eligible for deployment-gated release as RECORD 0.3.1 — RECONSTRUCTION / INTEGRITY — BROWSER COMMISSIONING. It must not be described as physically iPhone-commissioned, real-provider-commissioned, or tournament-frozen until the external matrix above has actually passed.

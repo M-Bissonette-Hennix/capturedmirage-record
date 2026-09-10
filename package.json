@@ -1,12 +1,12 @@
 {
   "name": "record-chess",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
-  "description": "RECORD \u2014 local-first evidentiary ingress for physical chess games.",
+  "description": "RECORD — local-first evidentiary ingress for physical chess games.",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check:syntax": "node --check app.js && node --check sw.js && for f in src/*.js scripts/*.mjs tools/*.mjs gateway/*.mjs gateway/*.js; do node --check \"$f\"; done",
+    "check:syntax": "node scripts/syntax-check.mjs",
     "check:schemas": "node scripts/schema-selftest.mjs",
     "check:static": "node scripts/static-qa.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
