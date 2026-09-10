@@ -1,5 +1,5 @@
 # RECORD — Development Bible
-## 0.3.0 — RECONSTRUCTION / INTEGRITY
+## 0.3.2 — RECONSTRUCTION / INTEGRITY
 
 ## Mission
 

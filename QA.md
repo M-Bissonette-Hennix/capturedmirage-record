@@ -1,4 +1,4 @@
-# RECORD 0.3.0 — QA Doctrine
+# RECORD 0.3.2 — QA Doctrine
 
 A green release requires evidence from multiple layers. No single unit-test count is sufficient.
 

@@ -1,6 +1,6 @@
-# RECORD 0.3.0 — Hostile Audit Remediation Status
+# RECORD 0.3.2 — Hostile Audit Remediation Status
 
-This ledger maps the attached 0.2.0 hostile forensic audit into the 0.3.0 implementation. It distinguishes **implemented/mechanically testable** controls from **external commissioning evidence** that cannot truthfully be produced inside an offline release build.
+This ledger maps the attached 0.2.0 hostile forensic audit into the 0.3.2 implementation. It distinguishes **implemented/mechanically testable** controls from **external commissioning evidence** that cannot truthfully be produced inside an offline release build.
 
 ## P0 corrective findings closed in source
 

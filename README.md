@@ -1,15 +1,15 @@
-# RECORD 0.3.0 — RECONSTRUCTION / INTEGRITY
+# RECORD 0.3.2 — RECONSTRUCTION / INTEGRITY
 
 RECORD converts imperfect physical chess evidence into a trustworthy digital game record with the least possible human effort **without concealing uncertainty**.
 
 > **Vision proposes. Chess logic constrains. The user certifies. CAPTUREDMIRAGE analyzes.**
 
-0.3.0 is the first RECORD release with a chess-constrained sequence reconstruction engine. It also incorporates the corrective integrity/security program required by the hostile audit of 0.2.0. The audit is preserved verbatim at `audits/RECORD_v0.2.0_hostile_audit.txt`.
+0.3.2 preserves the 0.3 reconstruction/integrity architecture and adds a browser-portability correction to the hosted migration harness after 0.3.1 passed Chromium but exposed a WebKit-specific harness failure during legacy-database seeding. The audit of 0.2.0 remains preserved verbatim at `audits/RECORD_v0.2.0_hostile_audit.txt`.
 
 ## Release identity
 
 - Product: **RECORD**
-- Release: **0.3.0 — RECONSTRUCTION / INTEGRITY**
+- Release: **0.3.2 — RECONSTRUCTION / INTEGRITY — BROWSER PORTABILITY**
 - Working database: `record-chess`, schema version 3
 - Legacy database recognized for migration: `record-foundation`, schema version 1
 - Recognition preprocessing: `record-preprocess/3`
@@ -85,11 +85,18 @@ Capture, manual chess entry, fixture recognition, reconstruction, backup/restore
 
 ## GitHub Pages deployment
 
-1. Extract the release ZIP.
-2. Put the **contents of the release directory** at repository root.
-3. Push to `main`.
-4. Repository → **Settings → Pages → Source → GitHub Actions**.
-5. The single QA/deploy trust graph must pass.
+For the canonical Windows deployment path used by this release:
+
+1. Extract the release ZIP into a normal local directory.
+2. From the extracted release directory run:
+
+```powershell
+node .\tools\deploy-github.mjs
+```
+
+The commissioner first verifies every `RELEASE_MANIFEST.json` descriptor, confirms the existing local/GitHub predecessor commit exactly, replaces only the working tree while preserving `.git`, runs all local source/build/distribution gates, commits and pushes 0.3.2, identifies the exact push-triggered Actions run through the GitHub REST API, waits for hosted Chromium/WebKit QA and Pages deployment, then verifies the public runtime and fail-closed recognition configuration.
+
+The commissioner is deliberately implemented in Node rather than a large PowerShell wrapper; Git and GitHub CLI arguments are passed as discrete process arguments rather than interpolated shell strings.
 
 The workflow performs source QA, deterministic tests, allowlisted `dist/` build, content-addressed distribution verification, Chromium/WebKit functional QA, and a secret tripwire before Pages artifact upload. Only `dist/` is deployed.
 
@@ -114,7 +121,7 @@ Release artifacts also include `RELEASE_MANIFEST.json` and `RELEASE_QA.md`.
 
 ## Important assurance boundary
 
-0.3.0 can be mechanically verified in this source package, but no source package can honestly manufacture evidence for tests requiring infrastructure not present in the build environment. The following remain commissioning gates until actually executed on the target deployment:
+0.3.2 can be mechanically verified in this source package, but no source package can honestly manufacture evidence for tests requiring infrastructure not present in the build environment. The following remain commissioning gates until actually executed on the target deployment:
 
 - GitHub-hosted Chromium/WebKit workflow run;
 - physical iPhone Safari/Home-Screen/camera/storage/share/VoiceOver matrix;

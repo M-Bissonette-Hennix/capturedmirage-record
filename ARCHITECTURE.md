@@ -1,4 +1,4 @@
-# RECORD 0.3.0 — Architecture
+# RECORD 0.3.2 — Architecture
 
 ## 1. Product boundary
 

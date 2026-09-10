@@ -1,4 +1,4 @@
-# RECORD 0.3.0 — Physical iPhone Acceptance Protocol
+# RECORD 0.3.2 — Physical iPhone Acceptance Protocol
 
 Record device model, iOS version, RECORD release/commit, deployment origin and date. Do not mark any item PASS without exercising it on the physical target device.
 

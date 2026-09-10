@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## 0.3.2 — BROWSER PORTABILITY — 2026-09-10
+
+### Hosted-browser commissioning correction
+
+- Preserved all 0.3 reconstruction/integrity application semantics; this release does not weaken certification, provenance, migration, or recognition authority boundaries.
+- Replaced the legacy-migration harness's JSON-resource execution context with a dedicated same-origin HTML seed fixture (`fixtures/browser-seed.html`) before creating the historical `record-foundation` IndexedDB database.
+- Moved source-fixture byte loading and SHA-256 calculation into the Node/Playwright host, then passes only bounded serializable seed data into the browser context.
+- Replaced implicit IndexedDB event-to-Promise resolution with explicit `() => resolve()` completion handlers and explicit error/abort/blocked handling.
+- Added post-seed IndexedDB readback checks for the legacy game and source Blob before migration is attempted.
+- Added post-migration browser readback checks for v3 game schema, invalidated legacy certification, `needsReview`, move count, source schema, source SHA-256 and Blob byte size.
+- Added structured browser-seed error reporting so a future WebKit failure identifies the actual IndexedDB stage instead of surfacing only `page.evaluate: null`.
+- Added browser/page error collection and guaranteed context/browser cleanup.
+- Added a deterministic regression test requiring the same-origin HTML migration seed and explicit transaction completion semantics.
+- Rotated the PWA shell cache namespace to 0.3.2.
+
+### Commissioning evidence inherited from 0.3.1 hosted run
+
+GitHub Actions run `34474562019` against commit `bb9bd2a842f0aa416ebe2a7982b9117b1fe34b0a` established:
+- Chromium actual v0.1→v0.3 browser migration: **PASS**.
+- Chromium functional/certification/offline workflow: **PASS**.
+- WebKit reached the migration harness but failed during the pre-migration legacy seed `page.evaluate` call before the RECORD migration application path could be evaluated.
+
+0.3.2 treats that WebKit result as a harness-portability failure rather than falsely calling the application migration path either PASS or FAIL. The exact 0.3.2 Chromium/WebKit hosted run remains a deployment gate.
+
 ## 0.3.1 — BROWSER COMMISSIONING — 2026-09-10
 
 ### Hosted-browser correction

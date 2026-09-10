@@ -1,4 +1,4 @@
-# RECORD 0.3.0 — Recognition and Reconstruction Specification
+# RECORD 0.3.2 — Recognition and Reconstruction Specification
 
 ## Authority boundary
 
