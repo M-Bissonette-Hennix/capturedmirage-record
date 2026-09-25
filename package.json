@@ -19,7 +19,8 @@
     "release:verify": "node scripts/verify-release.mjs",
     "release:package": "node scripts/package-release.mjs",
     "recognition:init": "node scripts/recognition-bootstrap.mjs --init",
-    "recognition:verify": "node scripts/verify-recognition-production.mjs"
+    "recognition:verify": "node scripts/verify-recognition-production.mjs",
+    "build:production": "node scripts/build-production.mjs"
   },
   "engines": {
     "node": ">=20"
