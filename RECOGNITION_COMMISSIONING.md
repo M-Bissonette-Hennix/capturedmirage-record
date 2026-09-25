@@ -213,10 +213,12 @@ node scripts/recognition-bootstrap.mjs --worker-origin "https://record-recogniti
 
 This changes/creates only public deployable configuration:
 
-- `config/runtime.json`
+- `config/runtime.production.json`
 - `recognition-proxy/vercel.json`
 
-The resulting RECORD runtime is intentionally:
+The repository's normal `config/runtime.json` is **not changed**. GitHub Pages and ordinary local builds therefore remain fixture-only/fail-closed. Only the dedicated Vercel frontend uses `npm run build:production`, which reads `config/runtime.production.json`.
+
+The resulting **dedicated-origin production runtime** is intentionally:
 
 ```text
 dedicatedOrigin = true
@@ -243,16 +245,18 @@ Now rerun all local gates:
 npm run check
 npm run build
 npm run check:dist
+npm run build:production
+npm run check:dist
 ```
 
-The build should explicitly report that the remote gateway is enabled.
+The normal `npm run build` should report that the remote gateway is disabled. The subsequent `npm run build:production` should explicitly report that the remote gateway is enabled.
 
 ## Phase 6 - commit the public production configuration
 
 After the gates pass:
 
 ```powershell
-git add config/runtime.json recognition-proxy/vercel.json
+git add config/runtime.production.json recognition-proxy/vercel.json
 git commit -m "Commission RECORD dedicated origin and public recognition proxy"
 git push origin record-recognition-commissioning
 ```
@@ -291,7 +295,7 @@ Invoke-WebRequest "https://record.officeofmethod.com/" -UseBasicParsing
 Invoke-RestMethod "https://record.officeofmethod.com/config/runtime.json"
 ```
 
-Do not continue if the runtime still says `gatewayEnabled: false` or `providerProfile: fixture`.
+Do not continue if the **deployed production** runtime still says `gatewayEnabled: false` or `providerProfile: fixture`.
 
 ## Phase 8 - create the recognition proxy Vercel project
 
@@ -458,7 +462,7 @@ The initial recognition budget is intentionally conservative. Raise it only afte
 
 ## Rollback
 
-If anything behaves unexpectedly, fail closed by changing `config/runtime.json` back to:
+If anything behaves unexpectedly, fail closed by replacing `config/runtime.production.json` with:
 
 ```json
 {
