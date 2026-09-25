@@ -33,3 +33,18 @@ Diagnostics exclude raw score-sheet images and player names by default. They may
 ## Deletion
 
 Deleting a local RECORD removes the local working copy and its dependent local objects. Previously exported backups/Capsules are independent files and are not remotely revoked.
+
+## Concrete Office of Method recognition data flow
+
+When the dedicated remote path is commissioned, a real scoresheet follows this privacy path:
+
+1. the exact original source remains local RECORD evidence;
+2. RECORD creates a bounded, perspective-corrected, metadata-stripped JPEG recognition derivative;
+3. the derivative plus evidence-binding metadata is sent from `record.officeofmethod.com` to `recognition.record.officeofmethod.com/api`;
+4. the public Vercel gateway hostname externally rewrites the request to the Cloudflare Worker;
+5. the Worker verifies device/origin/digest/replay/idempotency controls and sends the derivative to the configured OpenAI Responses model;
+6. the adapter requests observation-only structured output with `store:false`;
+7. the Worker validates and signs the response;
+8. RECORD verifies the pinned gateway signature and stores observations locally.
+
+The external provider does not receive the canonical original image by default. It receives the locally generated recognition derivative. `store:false` controls API response storage at the API boundary but is not, by itself, a complete organizational privacy/retention guarantee; account-level data controls and current provider policy remain a commissioning/operations responsibility.
