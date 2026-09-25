@@ -331,9 +331,9 @@ In Vercel:
 6. Do not override the tracked `vercel.json`.
 7. Confirm the effective build settings are:
    - Install: `npm ci`
-   - Build: `npm run build`
+   - Build: `npm run check && npm run build:production && npm run check:dist`
    - Output Directory: `dist`
-8. Deploy the merged `main` branch. The tracked root `vercel.json` invokes `npm run build:production`.
+8. Deploy the merged `main` branch. Do not override the tracked root `vercel.json`; it deliberately runs deterministic QA before and after the dedicated production build.
 9. Open **Project Settings -> Domains**.
 10. Add:
     `record.officeofmethod.com`
