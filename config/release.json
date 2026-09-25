@@ -1,11 +1,11 @@
 {
   "product": "RECORD",
-  "version": "0.3.3",
-  "release": "RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY",
-  "releasedAt": "2026-09-10T12:48:00.000Z",
+  "version": "0.4.0",
+  "release": "CERTIFICATION / FIELD OPERATIONS",
+  "releasedAt": "2026-09-25T20:25:00.000Z",
   "sourceRelease": {
-    "name": "RECORD-0.2.0-VISION-INTEGRITY(2).zip",
-    "sha256": "c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c"
+    "name": "RECORD-0.3.3-RECONSTRUCTION-INTEGRITY.zip",
+    "sha256": "3737f5a342b0fbe39608bb9e34c54ddb62dfd7bbaf39b53d093a28469447630a"
   },
   "hostileAudit": {
     "name": "RECORD_v0.2.0_hostile_audit.txt",
