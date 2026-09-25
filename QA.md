@@ -95,3 +95,18 @@ Before remote production recognition is described as commissioned, use a version
 - postgame note writes are serialized across input/change/blur events;
 - launcher icons are byte-pinned to deterministic CAPTUREDMIRAGE-logo resizes;
 - operational Pages workflow retains deterministic source/build/dist QA.
+
+## Dedicated-origin recognition commissioning gate
+
+The `record-recognition-commissioning` branch has a dedicated hosted QA workflow. It must pass:
+
+- deterministic source QA;
+- fail-closed default build;
+- distribution verification;
+- Wrangler parsing/type generation for the Worker + Durable Object configuration.
+
+That green source/configuration gate is necessary but not sufficient for production recognition.
+
+After the external infrastructure exists, `npm run recognition:verify` must also pass against the actual public endpoints. Real provider commissioning then requires a disposable scoresheet test followed by the adversarial registration/replay/digest/idempotency/rate-limit cases listed in `RECOGNITION_COMMISSIONING.md`.
+
+No hosted source check may be represented as evidence that the OpenAI key, Cloudflare Durable Object, custom domains, TLS, live CORS, provider accuracy, latency or cost have been commissioned.
