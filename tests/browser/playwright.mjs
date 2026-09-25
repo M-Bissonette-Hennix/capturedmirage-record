@@ -205,10 +205,10 @@ async function appGate(type,name){
     const page=await context.newPage();
     const diagnostics=wireDiagnostics(page,name,'functional');
     await page.goto(`${ORIGIN}/`,{waitUntil:'networkidle'});
-    await page.getByRole('button',{name:/NEW RECORD/}).click();
+    await page.getByRole('button',{name:'NEW EMPTY RECORD'}).click();
     await page.locator('input[type=file]').setInputFiles('fixtures/recognition/clean-fixture-001/source.png');
     await page.getByText('Page 1',{exact:true}).waitFor();
-    await page.getByRole('button',{name:'RECOGNIZE'}).click();
+    await page.getByRole('button',{name:'RUN FIXTURE'}).click();
     await page.getByText(/Recognition: COMPLETE/).waitFor();
     await page.getByRole('button',{name:'GAME RECORD'}).click();
     await page.getByRole('button',{name:'ENTER SAN'}).click();
@@ -217,15 +217,13 @@ async function appGate(type,name){
     await page.getByText('e4',{exact:true}).waitFor();
     await page.getByRole('button',{name:/REVIEW \/ CERTIFY/}).click();
     await page.getByRole('button',{name:'CERTIFY CURRENT RECORD'}).click();
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button',{name:'CERTIFY',exact:true}).click();
     await page.getByText(/Certification status: VALID/).waitFor();
     await page.getByRole('button',{name:'MARK UNREADABLE'}).first().click();
     await page.getByText(/Certification status: INVALIDATED/).waitFor();
-    await page.getByRole('button',{name:'CERTIFY CURRENT RECORD'}).click();
-    await page.getByRole('status').filter({hasText:/REC-CERT-006: Record is explicitly marked as needing review\./}).waitFor();
-    await diagnostics.consumeExpected(
-      /^console\.error: RecordError: Record is explicitly marked as needing review\.$/,
-      'the expected REC-CERT-006 recertification rejection'
-    );
+    await page.getByRole('button',{name:'CERTIFICATION BLOCKED'}).waitFor();
+    if(await page.getByRole('button',{name:'CERTIFICATION BLOCKED'}).isEnabled())throw new Error(`${name} certification blocker button unexpectedly enabled.`);
     await page.reload({waitUntil:'networkidle'});
     await page.getByRole('button',{name:'LIBRARY'}).click();
     await page.getByText(/1 plies/).waitFor();
