@@ -1,3 +1,4 @@
+export {RecordSecurityCoordinator} from './security-do.js';
 import {APP,LIMITS} from '../src/config.js';
 import {validateRecognitionEnvelope} from '../src/validators.js';
 import {sha256Hex,signEnvelope} from './core.mjs';
@@ -33,4 +34,4 @@ async function recognize(request,env,corsHeaders){
   const responseText=JSON.stringify(signed),complete=await securityCall(env,'/complete',{deviceId:descriptor.deviceId,idempotencyKey:metadata.idempotencyKey,bindingHash:authBody.bindingHash,reservationId:authBody.reservationId,response:responseText});if(!complete.ok)return json({error:'idempotency-completion-failed'},500,corsHeaders);return new Response(responseText,{status:200,headers:{...JSON_HEADERS,...corsHeaders}});
 }
 
-export default {async fetch(request,env){const corsHeaders=cors(env,request);if(!corsHeaders)return json({error:'origin-not-allowed'},403);if(request.method==='OPTIONS')return new Response(null,{status:204,headers:corsHeaders});if(request.method!=='POST')return json({error:'method-not-allowed'},405,corsHeaders);const path=new URL(request.url).pathname;if(path==='/register')return register(request,env,corsHeaders);if(path==='/recognize')return recognize(request,env,corsHeaders);return json({error:'not-found'},404,corsHeaders);}};
+export default {async fetch(request,env){const path=new URL(request.url).pathname;if(request.method==='GET'&&path==='/healthz')return json({ok:true,service:'record-recognition-gateway',protocol:APP.gatewayProtocol,build:'record-gateway/0.4.0'});const corsHeaders=cors(env,request);if(!corsHeaders)return json({error:'origin-not-allowed'},403);if(request.method==='OPTIONS')return new Response(null,{status:204,headers:corsHeaders});if(request.method!=='POST')return json({error:'method-not-allowed'},405,corsHeaders);if(path==='/register')return register(request,env,corsHeaders);if(path==='/recognize')return recognize(request,env,corsHeaders);return json({error:'not-found'},404,corsHeaders);}};
