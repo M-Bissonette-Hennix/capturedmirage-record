@@ -1,0 +1,16 @@
+{
+  "dedicatedOrigin": true,
+  "requiredOrigin": "https://record.officeofmethod.com",
+  "gatewayEnabled": true,
+  "gatewayUrl": "https://recognition.record.officeofmethod.com/api",
+  "gatewayPublicJwk": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "GENERATED_LOCALLY",
+    "y": "GENERATED_LOCALLY",
+    "ext": true,
+    "key_ops": ["verify"]
+  },
+  "providerProfile": "remote",
+  "builtAt": "GENERATED_AT_COMMISSIONING"
+}
