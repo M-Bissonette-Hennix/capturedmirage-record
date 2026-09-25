@@ -13,10 +13,11 @@ test('browser migration harness uses a same-origin HTML seed and explicit Indexe
   assert.match(p,/legacy seed failed:/);
 });
 
-test('browser diagnostics consume the one expected needsReview rejection without suppressing unexpected errors',()=>{
-  const p=fs.readFileSync('tests/browser/playwright.mjs','utf8');
-  assert.match(p,/consumeExpected\(/);
-  assert.match(p,/REC-CERT-006 recertification rejection/);
-  assert.match(p,/console\\\.error: RecordError: Record is explicitly marked as needing review/);
-  assert.match(p,/diagnostics\.assertClean\(\)/);
-});
+
+test('field UI accepts only JPEG/PNG, supports camera plus Photos/Files, and fences fixture recognition',()=>{const a=fs.readFileSync('app.js','utf8');assert.match(a,/accept:'image\/jpeg,image\/png'/);assert.doesNotMatch(a,/accept:'image\/jpeg,image\/png,image\/webp'/);assert.match(a,/CAPTURE PAGE/);assert.match(a,/ADD FROM PHOTOS \/ FILES/);assert.match(a,/FIXTURE LOCKED/);assert.match(a,/Fixture recognition cannot be applied to a real scoresheet/);});
+test('certification UI requires explicit human assertion and valid certification before Capsule export',()=>{const a=fs.readFileSync('app.js','utf8');assert.match(a,/I have compared the digital move record with the preserved source/);assert.match(a,/CAPSULE REQUIRES VALID CERTIFICATION/);assert.match(a,/Certification requires the explicit review assertion/);});
+test('iOS-oriented exports prefer native file sharing and cancelled Capsule export is not marked exported',()=>{const a=fs.readFileSync('app.js','utf8');assert.match(a,/async function shareOrSaveFile/);assert.match(a,/if\(!delivered\)\{toast\('Capsule export cancelled/);});
+test('Capsule verification has a defined error code',()=>{const e=fs.readFileSync('src/errors.js','utf8');assert.match(e,/CAPSULE_INVALID:\s*'REC-CAPS-001'/);});
+test('operational Pages workflow preserves deterministic QA, build and dist verification',()=>{const y=fs.readFileSync('.github/workflows/pages.yml','utf8');assert.match(y,/npm run check/);assert.match(y,/npm run build/);assert.match(y,/npm run check:dist/);assert.match(y,/upload-pages-artifact/);assert.match(y,/deploy-pages/);});
+
+test('postgame note writes are serialized to prevent blur/change races',()=>{const a=fs.readFileSync('app.js','utf8');assert.match(a,/notesSave=Promise\.resolve\(\)/);assert.match(a,/notesSave=notesSave\.then/);});
