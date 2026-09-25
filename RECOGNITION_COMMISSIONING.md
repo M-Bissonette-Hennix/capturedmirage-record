@@ -263,17 +263,26 @@ git status --short
 
 There must be no `.record-secrets` path in the output.
 
-Now rerun all local gates:
+Now run the commissioning preflight:
 
 ```powershell
-npm run check
-npm run build
-npm run check:dist
-npm run build:production
-npm run check:dist
+npm run recognition:preflight
 ```
 
-The normal `npm run build` should report that the remote gateway is disabled. The subsequent `npm run build:production` should explicitly report that the remote gateway is enabled.
+This deliberately performs three stages:
+
+1. deterministic source QA + fail-closed default build;
+2. dedicated-origin production build + distribution verification;
+3. a final default rebuild + distribution verification.
+
+The third stage matters: it restores the tracked `dist/` working tree to the fixture-only/fail-closed form so a local production preflight cannot accidentally leave gateway-enabled deployment bytes staged for GitHub Pages.
+
+The command must end with:
+
+```
+RECORD recognition preflight PASS
+Final tracked dist state is fail-closed/fixture.
+```
 
 ## Phase 6 - commit the public production configuration and merge only after CI is green
 
