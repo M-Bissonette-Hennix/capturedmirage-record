@@ -83,6 +83,22 @@ This is deliberate. A normal GitHub project Pages URL shares its browser origin 
 
 Capture, manual chess entry, reconstruction, backup/restore, certification and Capsule export remain usable there. Fixture recognition is test-only and is fenced to the bundled fixture source. Before remote recognition is enabled, move RECORD to a dedicated HTTPS origin, commission the gateway, pin its public P-256 JWK in `config/runtime.json`, and rebuild.
 
+## Dedicated-origin recognition commissioning
+
+A complete production commissioning scaffold now exists on the `record-recognition-commissioning` branch for:
+
+- `https://record.officeofmethod.com/` — dedicated RECORD frontend;
+- `https://recognition.record.officeofmethod.com/` — public recognition gateway hostname;
+- a stateful Cloudflare Worker upstream with Durable Object security coordination;
+- OpenAI Responses API observation-only transcription;
+- pinned P-256 gateway response verification;
+- one-use device bootstrap registration;
+- exact-origin CORS, digest binding, replay controls, idempotency and conservative request budgets.
+
+The tracked repository contains no provider secret, signing private key or bootstrap secret. Local commissioning secrets are generated into the gitignored `.record-secrets/` directory.
+
+See **`RECOGNITION_COMMISSIONING.md`** for the full step-by-step runbook.
+
 ## GitHub Pages deployment
 
 The repository's operational Pages workflow is intentionally simple and already proven in production:
