@@ -43,23 +43,50 @@ async function initSecrets(){
   await writeSecret('bootstrap-secret.txt',bootstrapSecret);
   await writeSecret('bootstrap-capability.txt',`${tokenId}.${bootstrapSecret}`);
 
-  const ps1=`# Generated locally. Contains no literal secrets; it reads ignored local files.
+  const ps1=`# Generated locally. Secrets are read from ignored local files and the OpenAI key is prompted without echo.
 $ErrorActionPreference = 'Stop'
 $cfg = 'gateway/wrangler.jsonc'
-function Put-FromFile([string]$Name,[string]$Path) {
-  Get-Content $Path -Raw | npx wrangler@${WRANGLER_VERSION} secret put $Name --config $cfg
-  if ($LASTEXITCODE -ne 0) { throw "Failed to install Cloudflare secret: $Name" }
+$wrangler = '${WRANGLER_VERSION}'
+$temp = '.record-secrets/cloudflare-secrets.deploy.json'
+
+function Read-Trimmed([string]$Path) {
+  return (Get-Content $Path -Raw).Trim()
 }
-Put-FromFile 'RECORD_GATEWAY_PRIVATE_JWK' '.record-secrets/gateway-private-jwk.json'
-Put-FromFile 'RECORD_GATEWAY_PUBLIC_JWK' '.record-secrets/gateway-public-jwk.json'
-Put-FromFile 'RECORD_GATEWAY_KEY_ID' '.record-secrets/gateway-key-id.txt'
-Put-FromFile 'RECORD_BOOTSTRAP_TOKEN_ID' '.record-secrets/bootstrap-token-id.txt'
-Put-FromFile 'RECORD_BOOTSTRAP_SECRET' '.record-secrets/bootstrap-secret.txt'
+
+$secure = Read-Host 'Paste RECORD OpenAI API key' -AsSecureString
+$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+try {
+  $openai = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+  if ([string]::IsNullOrWhiteSpace($openai) -or $openai.Length -lt 20) {
+    throw 'OpenAI API key appears invalid.'
+  }
+
+  $secrets = [ordered]@{
+    RECORD_GATEWAY_PRIVATE_JWK = Read-Trimmed '.record-secrets/gateway-private-jwk.json'
+    RECORD_GATEWAY_PUBLIC_JWK = Read-Trimmed '.record-secrets/gateway-public-jwk.json'
+    RECORD_GATEWAY_KEY_ID = Read-Trimmed '.record-secrets/gateway-key-id.txt'
+    RECORD_BOOTSTRAP_TOKEN_ID = Read-Trimmed '.record-secrets/bootstrap-token-id.txt'
+    RECORD_BOOTSTRAP_SECRET = Read-Trimmed '.record-secrets/bootstrap-secret.txt'
+    RECORD_OPENAI_API_KEY = $openai
+  }
+
+  $json = $secrets | ConvertTo-Json -Compress
+  [IO.File]::WriteAllText((Join-Path (Get-Location) $temp), $json, (New-Object Text.UTF8Encoding($false)))
+
+  npx wrangler@$wrangler deploy --config $cfg --secrets-file $temp
+  if ($LASTEXITCODE -ne 0) { throw "Cloudflare Worker deployment failed with exit code $LASTEXITCODE." }
+}
+finally {
+  if (Test-Path $temp) { Remove-Item $temp -Force }
+  if ($bstr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+  $openai = $null
+  $secure = $null
+}
+
 Write-Host ''
-Write-Host 'Now install the OpenAI API key interactively:'
-Write-Host 'npx wrangler@${WRANGLER_VERSION} secret put RECORD_OPENAI_API_KEY --config gateway/wrangler.jsonc'
+Write-Host 'Cloudflare Worker deployed with all required secrets in one version.'
 `;
-  await fs.writeFile(path.join(secretDir,'install-cloudflare-secrets.ps1'),ps1,{mode:0o600});
+  await fs.writeFile(path.join(secretDir,'deploy-cloudflare.ps1'),ps1,{mode:0o600});
 
   const publicReceipt={
     schema:'record-recognition-commissioning-public/1',
@@ -76,10 +103,10 @@ Write-Host 'npx wrangler@${WRANGLER_VERSION} secret put RECORD_OPENAI_API_KEY --
   console.log('Gateway signing key ID:',keyId);
   console.log('Bootstrap token ID:',tokenId);
   console.log('');
-  console.log('Next: install Cloudflare secrets with:');
-  console.log('powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".record-secrets\\install-cloudflare-secrets.ps1"');
+  console.log('Next: deploy the Cloudflare Worker and all secrets in one version with:');
+  console.log('powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".record-secrets\\deploy-cloudflare.ps1"');
   console.log('');
-  console.log('Then install RECORD_OPENAI_API_KEY interactively as instructed by that script.');
+  console.log('The script prompts for RECORD_OPENAI_API_KEY without echo and deletes its temporary secrets file in a finally block.');
 }
 
 async function configureProduction(workerOriginText){
