@@ -275,7 +275,7 @@ npm run check:dist
 
 The normal `npm run build` should report that the remote gateway is disabled. The subsequent `npm run build:production` should explicitly report that the remote gateway is enabled.
 
-## Phase 6 - commit the public production configuration
+## Phase 6 - commit the public production configuration and merge only after CI is green
 
 After the gates pass:
 
@@ -287,7 +287,28 @@ git push origin record-recognition-commissioning
 
 Do not add `.record-secrets`.
 
-## Phase 7 - create the dedicated RECORD Vercel project
+Wait for **RECORD Recognition Commissioning QA** on pull request #1 to complete successfully against that exact new head commit.
+
+Then inspect the pull request and confirm:
+
+- it is based on `main`;
+- the exact head commit is the one that passed QA;
+- `config/runtime.json` is still fixture-only/fail-closed;
+- `config/runtime.production.json` contains only public configuration and the gateway **public** key;
+- no `.record-secrets/` path appears in the diff.
+
+Only then merge pull request #1, preferably as a **squash merge**, so the many commissioning-development commits become one reviewable production change on `main`.
+
+This merge is safe for the existing GitHub Pages app because its normal build still reads `config/runtime.json`; only the dedicated Vercel project uses `npm run build:production`.
+
+After merging, update your local checkout:
+
+```powershell
+git switch main
+git pull --ff-only origin main
+```
+
+## Phase 7 - create the dedicated RECORD Vercel project from merged main
 
 The existing Office of Method Vercel team already owns the working `officeofmethod.com` project. Create a separate project for RECORD rather than modifying the main site.
 
@@ -303,7 +324,7 @@ In Vercel:
    - Install: `npm ci`
    - Build: `npm run build`
    - Output Directory: `dist`
-8. Deploy the branch after the public production configuration has been committed.
+8. Deploy the merged `main` branch. The tracked root `vercel.json` invokes `npm run build:production`.
 9. Open **Project Settings -> Domains**.
 10. Add:
     `record.officeofmethod.com`
