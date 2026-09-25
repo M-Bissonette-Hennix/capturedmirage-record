@@ -24,7 +24,7 @@
     "RECORD_ALLOWED_ORIGIN": "https://record.officeofmethod.com",
     "RECORD_REGISTRATION_PER_MINUTE": "5",
     "RECORD_REQUESTS_PER_MINUTE": "10",
-    "RECORD_DAILY_REQUEST_LIMIT": "100",
+    "RECORD_DAILY_REQUEST_LIMIT": "25",
     "RECORD_PROVIDER_MODE": "openai-responses",
     "RECORD_OPENAI_MODEL": "gpt-5.6-terra",
     "RECORD_PROVIDER_TIMEOUT_MS": "30000"
