@@ -101,3 +101,18 @@ Direct acceptance and certification fail if a cited cell claims another coordina
 ## Gateway
 
 The reference gateway uses a transactional security coordinator for one-use registration, device signatures, nonce/replay, rate/budget and device-namespaced body-bound idempotency. Provider credentials remain backend-only. Remote recognition must be commissioned at a dedicated HTTPS origin.
+
+## Commissioned production topology
+
+The production design is split deliberately across two Office of Method origins:
+
+- `https://record.officeofmethod.com` — dedicated RECORD PWA origin, built from `dist/` with `config/runtime.production.json`.
+- `https://recognition.record.officeofmethod.com/api` — public gateway hostname. Vercel performs an external rewrite to the stateful Cloudflare Worker; it stores no provider credential.
+
+The Cloudflare Worker owns the security and provider boundary. It exports `RecordSecurityCoordinator` as a SQLite-backed Durable Object and uses it for one-use registration, device public-key lookup, nonce replay state, per-device rate/budget accounting and exact idempotency reservations.
+
+The OpenAI adapter uses the Responses API with `store:false`, `detail:"original"`, bounded output, and strict Structured Outputs. Provider-side schema constraints are intentionally narrower than RECORD's own validator; the gateway re-validates semantic lengths, normalized coordinate bounds, identity bindings and the full recognition envelope before signing it.
+
+The production adapter sets candidate `providerScore` to `null`. RECORD does not treat an uncalibrated model confidence number as evidentiary probability.
+
+The default repository runtime remains fixture-only. A dedicated-origin production build is a separate build mode and cannot silently widen the GitHub Pages deployment.
