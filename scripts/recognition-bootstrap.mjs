@@ -140,6 +140,8 @@ async function configureProduction(workerOriginText){
     "headers":[
       {"source":"/api/:path*","headers":[
         {"key":"Cache-Control","value":"no-store"},
+        {"key":"CDN-Cache-Control","value":"no-store"},
+        {"key":"x-vercel-enable-rewrite-caching","value":"0"},
         {"key":"X-Content-Type-Options","value":"nosniff"},
         {"key":"Referrer-Policy","value":"no-referrer"}
       ]}
