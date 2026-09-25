@@ -52,5 +52,16 @@ jobs:
       - name: Verify dedicated-origin production distribution
         run: npm run check:dist
 
+      - name: Exercise exact operator preflight
+        shell: bash
+        run: |
+          cp .release/runtime-ci-production.json config/runtime.production.json
+          npm run recognition:preflight
+
+      - name: Remove ephemeral operator production runtime
+        if: always()
+        shell: bash
+        run: rm -f config/runtime.production.json
+
       - name: Validate Wrangler configuration and generated types
         run: npx --yes wrangler@4.138.0 types --config gateway/wrangler.jsonc --env-interface RecordGatewayEnv
