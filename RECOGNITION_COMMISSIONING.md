@@ -85,6 +85,30 @@ Use a Windows machine with:
 
 Do not paste provider credentials into GitHub, Vercel source, `config/runtime.json`, browser local settings or the PWA.
 
+### Phase 0A - create a dedicated OpenAI API project
+
+Do not reuse an unrelated personal API key.
+
+In the OpenAI API Platform:
+
+1. create a project named something explicit such as **RECORD Production Recognition**;
+2. in that project's model/limits settings, allow `gpt-5.6-terra`;
+3. set a conservative monthly spend limit and alerts; use an enforced hard project spend limit if available for the account;
+4. create a project-scoped API key for this gateway;
+5. keep the key visible only long enough to enter it into the local secure Wrangler deployment prompt.
+
+The API project/billing system is separate from a ChatGPT subscription. The key is a Cloudflare Worker secret, never a RECORD/browser/Vercel secret.
+
+RECORD also enforces an application-side initial budget of 25 recognition requests per registered device per UTC day. That limit complements provider billing controls; it does not replace them.
+
+### Phase 0B - create/choose the Cloudflare Workers account
+
+A separate Cloudflare DNS zone for `officeofmethod.com` is **not required** for this topology. Leave the working Office of Method site/DNS arrangement alone.
+
+The Worker is deployed to a `*.workers.dev` hostname and uses a SQLite-backed Durable Object. Cloudflare supports SQLite Durable Objects on Workers Free, but for production reliability the gateway should be tested against the actual account limits. If the Free Workers CPU ceiling is hit while hashing/encoding a full scoresheet derivative, move the Worker to the Paid Workers plan rather than weakening RECORD's digest/validation path.
+
+The public Office of Method gateway hostname remains a Vercel external rewrite, so the domain can remain with the existing Vercel-hosted Office of Method estate.
+
 ## Phase 1 - get the commissioning branch locally
 
 From an existing clone:
