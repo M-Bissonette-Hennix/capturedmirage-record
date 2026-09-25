@@ -48,6 +48,18 @@ const logo=await fs.readFile(path.join(root,'assets/branding/capturedmirage-logo
 const logoHash=crypto.createHash('sha256').update(logo).digest('hex');
 const CANONICAL_LOGO='df4f56b3ca47981e0202e433fe275bf15328ca58177599b3ba62a99cd796c8e6';
 if(logoHash!==CANONICAL_LOGO)throw new Error(`CAPTUREDMIRAGE logo drift: ${logoHash}`);
+const ICON_HASHES={
+  'apple-touch-icon.png':'8552590ea4f38d780e89bbe3f0944d29a72469bd854039da0ec5945df5a6f093',
+  'icon-192.png':'0c622b99cc4fcf1ecccaa4ad72894ff9a00b3d2684b5308ca72b4e1ebdce2ec4',
+  'icon-512.png':'4b901fd8bf3929fcd338eca2b82aa57775e6b5958815503d2c99d1b9e87383a8',
+  'maskable-192.png':'0c622b99cc4fcf1ecccaa4ad72894ff9a00b3d2684b5308ca72b4e1ebdce2ec4',
+  'maskable-512.png':'4b901fd8bf3929fcd338eca2b82aa57775e6b5958815503d2c99d1b9e87383a8'
+};
+for(const [name,expected] of Object.entries(ICON_HASHES)){
+  const bytes=await fs.readFile(path.join(root,'assets/icons',name));
+  const actual=crypto.createHash('sha256').update(bytes).digest('hex');
+  if(actual!==expected)throw new Error(`Home Screen icon drift: ${name} ${actual}`);
+}
 
 for(const side of ['w','b'])for(const piece of ['K','Q','R','B','N','P'])await fs.stat(path.join(root,'assets/pieces/cburnett',`${side}${piece}.svg`));
 const thirdParty=await fs.readFile(path.join(root,'THIRD_PARTY_NOTICES.md'),'utf8');
