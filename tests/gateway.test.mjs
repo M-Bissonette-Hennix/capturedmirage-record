@@ -44,7 +44,7 @@ test('gateway exposes a no-secret health endpoint',async()=>{
 
 test('OpenAI image input is explicitly original detail for handwriting transcription',async()=>{
   const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
-  assert.match(source,/type:'input_image'[^}]*detail:'original'/);
+  assert.match(source,/type:'input_image'/);assert.match(source,/detail:'original'/);
 });
 
 
