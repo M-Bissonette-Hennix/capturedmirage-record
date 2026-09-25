@@ -9,6 +9,8 @@ import {nowIso} from './record.js';
 const te=new TextEncoder();
 const td=new TextDecoder();
 
+export const FIXTURE_SOURCE_SHA256='852e523c5acfccee028de081a1962671c377999c43ebd2442a63fa717d8e20d4';
+
 export function packRecognitionRequest(metadata,imageBytes){
   const meta=te.encode(stableStringify(metadata)),img=imageBytes instanceof Uint8Array?imageBytes:new Uint8Array(imageBytes);
   if(meta.length>64*1024)throw new RecordError(ERR.VIS_SCHEMA,'Recognition request metadata is too large.');
@@ -22,8 +24,9 @@ export function unpackRecognitionRequest(bytes){
 }
 
 export class FixtureRecognitionProvider{
-  constructor(fixture){this.fixture=fixture;this.name='fixture';}
+  constructor(fixture,{allowedSourceSha256=FIXTURE_SOURCE_SHA256}={}){this.fixture=fixture;this.name='fixture';this.allowedSourceSha256=allowedSourceSha256;}
   async recognize(input){
+    if(this.allowedSourceSha256&&input.sourceSha256!==this.allowedSourceSha256)throw new RecordError(ERR.VIS_FIXTURE,'Fixture recognition is restricted to the bundled test scoresheet and cannot be applied to real evidence.');
     const env=structuredClone(this.fixture);env.schema=APP.recognitionEnvelopeSchema;env.requestId=input.requestId;env.gameId=input.gameId;env.pageId=input.pageId;env.sourceSha256=input.sourceSha256;env.runSequence=input.runSequence;env.supersedesRequestId=input.supersedesRequestId;
     env.derivedAsset={...env.derivedAsset,id:input.derivedAsset.id,sha256:input.derivedAsset.sha256,mime:input.derivedAsset.mime,width:input.derivedAsset.width,height:input.derivedAsset.height,preprocessorVersion:input.derivedAsset.preprocessorVersion};env.gateway={build:'fixture-local/3',keyId:'UNSIGNED_FIXTURE',signedAt:nowIso()};env.signature='';validateRecognitionEnvelope(env);return env;
   }
