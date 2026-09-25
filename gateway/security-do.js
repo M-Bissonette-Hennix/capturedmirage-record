@@ -4,6 +4,11 @@ const te=new TextEncoder();
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const safeId=v=>/^[A-Za-z0-9._-]{8,96}$/.test(String(v||''));
 const safeHash=v=>/^[a-f0-9]{64}$/i.test(String(v||''));
+const CLEANUP_INTERVAL_MS=60*60_000;
+const NONCE_TTL_MS=10*60_000;
+const MINUTE_KEY_TTL_MS=10*60_000;
+const DAILY_KEY_TTL_MS=3*24*60*60_000;
+const IDEMPOTENCY_TTL_MS=7*24*60*60_000;
 
 async function verifyDescriptor({descriptor,publicJwk}){
   const {deviceId,timestamp,nonce,bodyHash,signature}=descriptor||{};if(!safeId(deviceId)||!safeId(nonce)||!safeHash(bodyHash)||typeof signature!=='string')return {ok:false,reason:'auth-shape'};
@@ -14,6 +19,27 @@ async function verifyDescriptor({descriptor,publicJwk}){
 
 export class RecordSecurityCoordinator{
   constructor(state,env){this.state=state;this.env=env;}
+  async ensureCleanupAlarm(){
+    const storage=this.state.storage;
+    if(typeof storage.getAlarm!=='function'||typeof storage.setAlarm!=='function')return;
+    const existing=await storage.getAlarm();
+    if(existing===null||existing===undefined)await storage.setAlarm(Date.now()+CLEANUP_INTERVAL_MS);
+  }
+  async alarm(){
+    const storage=this.state.storage;
+    if(typeof storage.list!=='function')return this.ensureCleanupAlarm();
+    const now=Date.now(),minuteCutoff=Math.floor((now-MINUTE_KEY_TTL_MS)/60_000),dailyCutoff=now-DAILY_KEY_TTL_MS,idemCutoff=now-IDEMPOTENCY_TTL_MS,nonceCutoff=now-NONCE_TTL_MS;
+    const entries=await storage.list();
+    for(const [key,value] of entries){
+      let remove=false;
+      if(key.startsWith('nonce:'))remove=Number(value?.seenAt||0)<nonceCutoff;
+      else if(key.startsWith('burst:')||key.startsWith('register-rate:')){const n=Number(key.slice(key.lastIndexOf(':')+1));remove=Number.isFinite(n)&&n<minuteCutoff;}
+      else if(key.startsWith('daily:')){const date=key.slice(-10),t=Date.parse(date+'T00:00:00.000Z');remove=Number.isFinite(t)&&t<dailyCutoff;}
+      else if(key.startsWith('idem:')){const t=Number(value?.completedAt||value?.startedAt||0);remove=t>0&&t<idemCutoff;}
+      if(remove)await storage.delete(key);
+    }
+    if(typeof storage.setAlarm==='function')await storage.setAlarm(now+CLEANUP_INTERVAL_MS);
+  }
   async fetch(request){
     const path=new URL(request.url).pathname;let body;try{body=await request.json();}catch{return json({error:'invalid-json'},400);}
     if(path==='/register')return this.register(body);
@@ -33,7 +59,7 @@ export class RecordSecurityCoordinator{
       const consumed=await txn.get(`bootstrap-consumed:${bootstrapTokenId}`);if(consumed){result={status:409,body:{error:'bootstrap-consumed'}};return;}
       if(await txn.get(`device:${deviceId}`)){result={status:409,body:{error:'device-exists'}};return;}
       await txn.put(`bootstrap-consumed:${bootstrapTokenId}`,{deviceId,consumedAt:new Date().toISOString()});await txn.put(`device:${deviceId}`,{publicJwk,registeredAt:new Date().toISOString()});result={status:200,body:{registered:true,deviceId}};
-    });return json(result.body,result.status);
+    });await this.ensureCleanupAlarm();return json(result.body,result.status);
   }
   async authorize(body){
     const {descriptor,idempotencyKey,binding,minuteLimit=10,dailyLimit=100}=body||{};if(!descriptor||!safeHash(idempotencyKey)||!binding||!safeId(descriptor.deviceId))return json({error:'invalid-request'},400);
@@ -46,7 +72,7 @@ export class RecordSecurityCoordinator{
       const minute=Math.floor(Date.now()/60_000),burstKey=`burst:${descriptor.deviceId}:${minute}`,burst=Number(await txn.get(burstKey)||0);if(burst>=Number(minuteLimit)){result={status:429,body:{error:'rate-limit'}};return;}
       const day=new Date().toISOString().slice(0,10),dayKey=`daily:${descriptor.deviceId}:${day}`,daily=Number(await txn.get(dayKey)||0);if(daily>=Number(dailyLimit)){result={status:429,body:{error:'budget-exceeded'}};return;}
       await txn.put(burstKey,burst+1);await txn.put(dayKey,daily+1);await txn.put(cacheKey,{state:'PROCESSING',bindingHash,reservationId,startedAt:Date.now()});result={status:200,body:{cached:false,reservationId,bindingHash}};
-    });return json(result.body,result.status);
+    });await this.ensureCleanupAlarm();return json(result.body,result.status);
   }
   async complete(body){
     const {deviceId,idempotencyKey,bindingHash,reservationId,response}=body||{};if(!safeId(deviceId)||!safeHash(idempotencyKey)||!safeHash(bindingHash)||typeof reservationId!=='string'||typeof response!=='string')return json({error:'invalid-request'},400);const key=`idem:${deviceId}:${idempotencyKey}`;let ok=false;
