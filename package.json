@@ -20,7 +20,8 @@
     "release:package": "node scripts/package-release.mjs",
     "recognition:init": "node scripts/recognition-bootstrap.mjs --init",
     "recognition:verify": "node scripts/verify-recognition-production.mjs",
-    "build:production": "node scripts/build-production.mjs"
+    "build:production": "node scripts/build-production.mjs",
+    "recognition:preflight": "node scripts/recognition-preflight.mjs"
   },
   "engines": {
     "node": ">=20"
