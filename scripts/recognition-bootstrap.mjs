@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const root=process.cwd();
 const secretDir=path.join(root,'.record-secrets');
-const runtimePath=path.join(root,'config','runtime.json');
+const runtimePath=path.join(root,'config','runtime.production.json');
 const proxyPath=path.join(root,'recognition-proxy','vercel.json');
 const WRANGLER_VERSION='4.138.0';
 
@@ -151,7 +151,7 @@ async function configureProduction(workerOriginText){
   await fs.writeFile(proxyPath,JSON.stringify(proxy,null,2)+'\n');
 
   console.log('Production public configuration written:');
-  console.log(' - config/runtime.json');
+  console.log(' - config/runtime.production.json');
   console.log(' - recognition-proxy/vercel.json');
   console.log('');
   console.log('Frontend origin: https://record.officeofmethod.com');
