@@ -27,7 +27,7 @@ https://record-recognition-gateway.<account>.workers.dev
         |
         +-- OpenAI Responses API
               - model: gpt-5.6-terra
-              - image detail: high
+              - image detail: original
               - strict Structured Outputs
               - store: false
               - observations only, never historical authority
@@ -456,7 +456,7 @@ Public/tracked values are allowed to include:
 - gateway key ID;
 - gateway public JWK.
 
-The OpenAI adapter uses the Responses API with `store:false`, high-detail image input and a strict observation-only JSON schema. Provider/org retention and API billing should still be reviewed as part of ongoing operations.
+The OpenAI adapter uses the Responses API with `store:false`, original-detail image input and a strict observation-only JSON schema. Provider/org retention and API billing should still be reviewed as part of ongoing operations.
 
 The initial recognition budget is intentionally conservative. Raise it only after observing real tournament usage and cost.
 
