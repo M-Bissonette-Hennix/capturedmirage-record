@@ -6,12 +6,17 @@ import {validateGame, validateRecognitionEnvelope, validateSourcePage} from './v
 
 export const nowIso = () => new Date().toISOString();
 
+export function localPgnDate(date = new Date()) {
+  const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');
+  return `${y}.${m}.${d}`;
+}
+
 export function createGame() {
   const t = nowIso();
   return {
     id: uuid(), schema: APP.gameSchema, recordType:'PLAYED_GAME', createdAt:t, updatedAt:t,
     revision:0, sourceRevision:0, workflowState:'NEW', certificationStatus:'UNCERTIFIED',
-    metadata:{event:'',site:'',date:t.slice(0,10).replaceAll('-','.'),round:'',board:'',section:'',white:'',black:'',result:'*',timeControl:'',resultProvenance:'UNKNOWN'},
+    metadata:{event:'',site:'',date:localPgnDate(),round:'',board:'',section:'',white:'',black:'',result:'*',timeControl:'',resultProvenance:'UNKNOWN'},
     startFen:START_FEN, moves:[], notes:'', certification:null, flags:{needsReview:false},
   };
 }
