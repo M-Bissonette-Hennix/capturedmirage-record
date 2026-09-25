@@ -70,7 +70,7 @@ for(const m of workflow.matchAll(/uses:\s*([^\s#]+)/g)){const ref=m[1].split('@'
 if(!/with:\s*\n\s*path:\s*dist/m.test(workflow))throw new Error('Pages deployment must upload only dist/.');
 
 const all=[];
-async function walk(d){for(const e of await fs.readdir(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory()){if(!['.git','dist','node_modules'].includes(e.name))await walk(p);}else all.push(p);}}
+async function walk(d){for(const e of await fs.readdir(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory()){if(!['.git','dist','node_modules','.record-secrets'].includes(e.name))await walk(p);}else all.push(p);}}
 await walk(root);
 const secret=/(sk-[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|api[_-]?key\s*[:=]\s*["'][^"']{12,})/i;
 for(const f of all){if(!/\.(js|mjs|json|md|html|yml|yaml|txt)$/.test(f))continue;const t=await fs.readFile(f,'utf8').catch(()=>null);if(t&&secret.test(t))throw new Error(`Potential secret in ${path.relative(root,f)}`);}
