@@ -108,3 +108,9 @@ test('stale processing reservation can be reacquired with the same binding',asyn
   const res=await f.coordinator.fetch(new Request('https://x/authorize',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({descriptor,idempotencyKey:idem,binding,minuteLimit:10,dailyLimit:20})}));
   assert.equal(res.status,200);const out=await res.json();assert.equal(out.cached,false);assert.notEqual(out.reservationId,'old-reservation');
 });
+
+
+test('OpenAI transcription reasoning is explicitly bounded',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/reasoning:\{effort:'low'\}/);
+});
