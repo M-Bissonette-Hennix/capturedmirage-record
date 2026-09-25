@@ -73,7 +73,7 @@ try {
   $json = $secrets | ConvertTo-Json -Compress
   [IO.File]::WriteAllText((Join-Path (Get-Location) $temp), $json, (New-Object Text.UTF8Encoding($false)))
 
-  npx wrangler@$wrangler deploy --config $cfg --secrets-file $temp
+  npx --yes wrangler@$wrangler deploy --config $cfg --secrets-file $temp
   if ($LASTEXITCODE -ne 0) { throw "Cloudflare Worker deployment failed with exit code $LASTEXITCODE." }
 }
 finally {
