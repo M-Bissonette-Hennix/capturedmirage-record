@@ -63,5 +63,8 @@ jobs:
         shell: bash
         run: rm -f config/runtime.production.json
 
+      - name: Prove operator preflight restored tracked fail-closed dist
+        run: git diff --exit-code -- dist
+
       - name: Validate Wrangler configuration and generated types
         run: npx --yes wrangler@4.138.0 types --config gateway/wrangler.jsonc --env-interface RecordGatewayEnv
