@@ -39,7 +39,18 @@ test('recognition commissioning scaffolding keeps secrets out of tracked config'
 
 test('dedicated Vercel frontend config builds only verified dist output',()=>{
   const v=JSON.parse(fs.readFileSync('vercel.json','utf8'));
-  assert.equal(v.buildCommand,'npm run build');
+  assert.equal(v.buildCommand,'npm run build:production');
   assert.equal(v.outputDirectory,'dist');
   assert.equal(v.installCommand,'npm ci');
+});
+
+
+test('default runtime remains fail-closed while Vercel production uses separate runtime',()=>{
+  const runtime=JSON.parse(fs.readFileSync('config/runtime.json','utf8'));
+  const build=fs.readFileSync('scripts/build.mjs','utf8');
+  const prod=fs.readFileSync('scripts/build-production.mjs','utf8');
+  assert.equal(runtime.gatewayEnabled,false);
+  assert.equal(runtime.providerProfile,'fixture');
+  assert.match(build,/RECORD_RUNTIME_CONFIG/);
+  assert.match(prod,/config\/runtime\.production\.json/);
 });
