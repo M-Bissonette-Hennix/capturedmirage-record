@@ -1,0 +1,42 @@
+name: RECORD Recognition Commissioning QA
+
+on:
+  push:
+    branches:
+      - record-recognition-commissioning
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: record-recognition-commissioning-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout commissioning branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Deterministic source QA
+        run: npm run check
+
+      - name: Build default fail-closed distribution
+        run: npm run build
+
+      - name: Verify distribution
+        run: npm run check:dist
+
+      - name: Validate Wrangler configuration and generated types
+        run: npx --yes wrangler@4.138.0 types --config gateway/wrangler.jsonc --env-interface RecordGatewayEnv
