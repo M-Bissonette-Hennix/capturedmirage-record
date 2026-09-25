@@ -28,5 +28,15 @@
     "RECORD_PROVIDER_MODE": "openai-responses",
     "RECORD_OPENAI_MODEL": "gpt-5.6-terra",
     "RECORD_PROVIDER_TIMEOUT_MS": "30000"
+  },
+  "secrets": {
+    "required": [
+      "RECORD_GATEWAY_PRIVATE_JWK",
+      "RECORD_GATEWAY_PUBLIC_JWK",
+      "RECORD_GATEWAY_KEY_ID",
+      "RECORD_BOOTSTRAP_TOKEN_ID",
+      "RECORD_BOOTSTRAP_SECRET",
+      "RECORD_OPENAI_API_KEY"
+    ]
   }
 }
