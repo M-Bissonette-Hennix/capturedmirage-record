@@ -46,3 +46,11 @@ test('OpenAI image input is explicitly high detail for handwriting transcription
   const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
   assert.match(source,/type:'input_image'[^}]*detail:'high'/);
 });
+
+
+test('Structured Outputs schema requires every declared optional-like field',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/required:\['text','rank','providerScore'\]/);
+  assert.match(source,/required:\['field','text','crop'\]/);
+  assert.match(source,/crop:\{anyOf:\[/);
+});
