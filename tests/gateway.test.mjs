@@ -8,7 +8,7 @@ import {sha256Hex,stableStringify,bytesToB64,signEnvelope,verifyRequestSignature
 import {packRecognitionRequest} from '../src/recognition.js';
 import {APP} from '../src/config.js';
 const te=new TextEncoder();
-class MemoryStorage{constructor(){this.map=new Map();}async get(k){return this.map.get(k)??null;}async put(k,v){this.map.set(k,structuredClone(v));}async delete(k){this.map.delete(k);}async transaction(fn){return fn(this);}}
+class MemoryStorage{constructor(){this.map=new Map();this.alarm=null;}async get(k){return this.map.get(k)??null;}async put(k,v){this.map.set(k,structuredClone(v));}async delete(k){this.map.delete(k);}async list(){return new Map(this.map);}async getAlarm(){return this.alarm;}async setAlarm(v){this.alarm=v;}async transaction(fn){return fn(this);}}
 class SecurityBinding{constructor(coordinator){this.coordinator=coordinator;}idFromName(name){return name;}get(){return {fetch:req=>this.coordinator.fetch(req)};}}
 async function keyPair(){const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);return {pair,pub:await crypto.subtle.exportKey('jwk',pair.publicKey),priv:await crypto.subtle.exportKey('jwk',pair.privateKey)};}
 async function signedHeaders({privateKey,deviceId,body,idempotencyKey,nonce=`nonce-${crypto.randomUUID()}`}){const timestamp=new Date().toISOString(),bodyHash=await sha256Hex(body),message=stableStringify({bodyHash,deviceId,nonce,timestamp}),sig=bytesToB64(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},privateKey,te.encode(message))));return {'content-type':'application/octet-stream','origin':'https://record.example.test','x-record-device':deviceId,'x-record-timestamp':timestamp,'x-record-nonce':nonce,'x-record-body-sha256':bodyHash,'x-record-signature':sig,'x-record-idempotency-key':idempotencyKey};}
@@ -61,4 +61,28 @@ test('OpenAI provider output is explicitly bounded',async()=>{
   assert.match(source,/max_output_tokens:20000/);
   assert.match(source,/openai-incomplete-/);
   assert.match(source,/openai-refusal/);
+});
+
+
+test('security coordinator alarm prunes ephemeral replay/rate/idempotency state but preserves devices and consumed bootstrap',async()=>{
+  const storage=new MemoryStorage(),coordinator=new RecordSecurityCoordinator({storage},{}),now=Date.now();
+  await storage.put('device:device-00000001',{publicJwk:{kty:'EC'}});
+  await storage.put('bootstrap-consumed:bootstrap-0001',{deviceId:'device-00000001',consumedAt:new Date(now-30*24*60*60_000).toISOString()});
+  await storage.put('nonce:device-00000001:nonce-old',{seenAt:now-60*60_000});
+  await storage.put('nonce:device-00000001:nonce-fresh',{seenAt:now});
+  await storage.put('burst:device-00000001:'+Math.floor((now-60*60_000)/60_000),1);
+  await storage.put('register-rate:192.0.2.1:'+Math.floor((now-60*60_000)/60_000),1);
+  const oldDay=new Date(now-10*24*60*60_000).toISOString().slice(0,10);
+  await storage.put('daily:device-00000001:'+oldDay,1);
+  await storage.put('idem:device-00000001:'+'a'.repeat(64),{state:'COMPLETE',completedAt:now-8*24*60*60_000});
+  await storage.put('idem:device-00000001:'+'b'.repeat(64),{state:'COMPLETE',completedAt:now});
+  await coordinator.alarm();
+  assert.equal(await storage.get('nonce:device-00000001:nonce-old'),null);
+  assert.ok(await storage.get('nonce:device-00000001:nonce-fresh'));
+  assert.equal(await storage.get('daily:device-00000001:'+oldDay),null);
+  assert.equal(await storage.get('idem:device-00000001:'+'a'.repeat(64)),null);
+  assert.ok(await storage.get('idem:device-00000001:'+'b'.repeat(64)));
+  assert.ok(await storage.get('device:device-00000001'));
+  assert.ok(await storage.get('bootstrap-consumed:bootstrap-0001'));
+  assert.ok(storage.alarm>now);
 });
