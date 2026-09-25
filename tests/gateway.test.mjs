@@ -31,3 +31,18 @@ test('OpenAI Responses adapter is explicitly stateless at API storage boundary',
   assert.match(source,/type:'json_schema'/);
   assert.match(source,/input_image/);
 });
+
+
+test('gateway exposes a no-secret health endpoint',async()=>{
+  const res=await worker.fetch(new Request('https://gateway.example/healthz',{method:'GET'}),{});
+  assert.equal(res.status,200);
+  const body=await res.json();
+  assert.equal(body.ok,true);
+  assert.equal(body.service,'record-recognition-gateway');
+  assert.equal(body.protocol,APP.gatewayProtocol);
+});
+
+test('OpenAI image input is explicitly high detail for handwriting transcription',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/type:'input_image'[^}]*detail:'high'/);
+});
