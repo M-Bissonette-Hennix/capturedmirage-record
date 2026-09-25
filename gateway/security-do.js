@@ -9,6 +9,7 @@ const NONCE_TTL_MS=10*60_000;
 const MINUTE_KEY_TTL_MS=10*60_000;
 const DAILY_KEY_TTL_MS=3*24*60*60_000;
 const IDEMPOTENCY_TTL_MS=7*24*60*60_000;
+const PROCESSING_TTL_MS=2*60_000;
 
 async function verifyDescriptor({descriptor,publicJwk}){
   const {deviceId,timestamp,nonce,bodyHash,signature}=descriptor||{};if(!safeId(deviceId)||!safeId(nonce)||!safeHash(bodyHash)||typeof signature!=='string')return {ok:false,reason:'auth-shape'};
@@ -35,7 +36,7 @@ export class RecordSecurityCoordinator{
       if(key.startsWith('nonce:'))remove=Number(value?.seenAt||0)<nonceCutoff;
       else if(key.startsWith('burst:')||key.startsWith('register-rate:')){const n=Number(key.slice(key.lastIndexOf(':')+1));remove=Number.isFinite(n)&&n<minuteCutoff;}
       else if(key.startsWith('daily:')){const date=key.slice(-10),t=Date.parse(date+'T00:00:00.000Z');remove=Number.isFinite(t)&&t<dailyCutoff;}
-      else if(key.startsWith('idem:')){const t=Number(value?.completedAt||value?.startedAt||0);remove=t>0&&t<idemCutoff;}
+      else if(key.startsWith('idem:')){const t=Number(value?.completedAt||value?.startedAt||0),cutoff=value?.state==='PROCESSING'?now-PROCESSING_TTL_MS:idemCutoff;remove=t>0&&t<cutoff;}
       if(remove)await storage.delete(key);
     }
     if(typeof storage.setAlarm==='function')await storage.setAlarm(now+CLEANUP_INTERVAL_MS);
@@ -68,7 +69,7 @@ export class RecordSecurityCoordinator{
     const bindingHash=await sha256Hex(te.encode(stableStringify(binding))),cacheKey=`idem:${descriptor.deviceId}:${idempotencyKey}`,nonceKey=`nonce:${descriptor.deviceId}:${descriptor.nonce}`,reservationId=crypto.randomUUID();let result={status:500,body:{error:'transaction-failed'}};
     await this.state.storage.transaction(async txn=>{
       if(await txn.get(nonceKey)){result={status:409,body:{error:'replay'}};return;}await txn.put(nonceKey,{seenAt:Date.now()});
-      const cached=await txn.get(cacheKey);if(cached){if(cached.bindingHash!==bindingHash){result={status:409,body:{error:'idempotency-binding-mismatch'}};return;}if(cached.state==='COMPLETE'){result={status:200,body:{cached:true,response:cached.response}};return;}if(cached.state==='PROCESSING'){result={status:409,body:{error:'request-already-processing'}};return;}}
+      const cached=await txn.get(cacheKey);if(cached){if(cached.bindingHash!==bindingHash){result={status:409,body:{error:'idempotency-binding-mismatch'}};return;}if(cached.state==='COMPLETE'){result={status:200,body:{cached:true,response:cached.response}};return;}if(cached.state==='PROCESSING'){const age=Date.now()-Number(cached.startedAt||0);if(age>=0&&age<=PROCESSING_TTL_MS){result={status:409,body:{error:'request-already-processing'}};return;}await txn.delete(cacheKey);}}
       const minute=Math.floor(Date.now()/60_000),burstKey=`burst:${descriptor.deviceId}:${minute}`,burst=Number(await txn.get(burstKey)||0);if(burst>=Number(minuteLimit)){result={status:429,body:{error:'rate-limit'}};return;}
       const day=new Date().toISOString().slice(0,10),dayKey=`daily:${descriptor.deviceId}:${day}`,daily=Number(await txn.get(dayKey)||0);if(daily>=Number(dailyLimit)){result={status:429,body:{error:'budget-exceeded'}};return;}
       await txn.put(burstKey,burst+1);await txn.put(dayKey,daily+1);await txn.put(cacheKey,{state:'PROCESSING',bindingHash,reservationId,startedAt:Date.now()});result={status:200,body:{cached:false,reservationId,bindingHash}};
