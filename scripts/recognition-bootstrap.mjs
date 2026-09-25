@@ -35,7 +35,6 @@ async function initSecrets(){
   const keyId=`record-gateway-p256-${stamp}-${crypto.randomBytes(4).toString('hex')}`;
   const tokenId=`boot_${b64url(crypto.randomBytes(12))}`;
   const bootstrapSecret=b64url(crypto.randomBytes(36));
-  const proxySharedSecret=b64url(crypto.randomBytes(36));
 
   await writeSecret('gateway-private-jwk.json',JSON.stringify(privateJwk));
   await writeSecret('gateway-public-jwk.json',JSON.stringify(publicJwk));
@@ -43,7 +42,6 @@ async function initSecrets(){
   await writeSecret('bootstrap-token-id.txt',tokenId);
   await writeSecret('bootstrap-secret.txt',bootstrapSecret);
   await writeSecret('bootstrap-capability.txt',`${tokenId}.${bootstrapSecret}`);
-  await writeSecret('proxy-shared-secret.txt',proxySharedSecret);
 
   const ps1=`# Generated locally. Contains no literal secrets; it reads ignored local files.
 $ErrorActionPreference = 'Stop'
@@ -69,7 +67,7 @@ Write-Host 'npx wrangler@${WRANGLER_VERSION} secret put RECORD_OPENAI_API_KEY --
     keyId,
     gatewayPublicJwk:publicJwk,
     bootstrapTokenId:tokenId,
-    note:'Public commissioning receipt only. Private key, bootstrap secret and proxy shared secret remain under ignored .record-secrets/.'
+    note:'Public commissioning receipt only. Private key and bootstrap secret remain under ignored .record-secrets/.'
   };
   await fs.writeFile(path.join(secretDir,'public-receipt.json'),JSON.stringify(publicReceipt,null,2)+'\n',{mode:0o600});
 
@@ -131,7 +129,7 @@ async function configureProduction(workerOriginText){
   console.log('Public gateway origin: https://recognition.record.officeofmethod.com/api');
   console.log('Cloudflare upstream:',worker.origin);
   console.log('');
-  console.log('No private signing key, bootstrap secret, proxy secret or OpenAI API key was written to tracked files.');
+  console.log('No private signing key, bootstrap secret or OpenAI API key was written to tracked files.');
 }
 
 if(process.argv.includes('--init')) await initSecrets();
