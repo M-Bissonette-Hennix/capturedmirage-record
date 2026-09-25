@@ -68,3 +68,20 @@ jobs:
 
       - name: Validate Wrangler configuration and generated types
         run: npx --yes wrangler@4.138.0 types --config gateway/wrangler.jsonc --env-interface RecordGatewayEnv
+
+      - name: Bundle Cloudflare gateway without deployment
+        shell: bash
+        run: |
+          mkdir -p .release/wrangler-dry-run
+          cat > .release/ci-worker-secrets.json <<'JSON'
+          {
+            "RECORD_GATEWAY_PRIVATE_JWK": "ci-private-jwk-placeholder",
+            "RECORD_GATEWAY_PUBLIC_JWK": "ci-public-jwk-placeholder",
+            "RECORD_GATEWAY_KEY_ID": "ci-key-id-placeholder",
+            "RECORD_BOOTSTRAP_TOKEN_ID": "ci-bootstrap-token-placeholder",
+            "RECORD_BOOTSTRAP_SECRET": "ci-bootstrap-secret-placeholder",
+            "RECORD_OPENAI_API_KEY": "ci-openai-key-placeholder"
+          }
+          JSON
+          npx --yes wrangler@4.138.0 deploy             --dry-run             --outdir .release/wrangler-dry-run             --config gateway/wrangler.jsonc             --secrets-file .release/ci-worker-secrets.json
+          rm -f .release/ci-worker-secrets.json
