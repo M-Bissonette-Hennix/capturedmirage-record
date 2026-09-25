@@ -162,7 +162,7 @@ Do not use `--force` unless intentionally rotating all generated commissioning c
 Wrangler can keep OAuth credentials in the operating-system keyring. Run:
 
 ```powershell
-npx wrangler@4.138.0 login --use-keyring
+npx --yes wrangler@4.138.0 login --use-keyring
 ```
 
 Complete the Cloudflare browser authorization.
@@ -170,7 +170,7 @@ Complete the Cloudflare browser authorization.
 Then verify the active account:
 
 ```powershell
-npx wrangler@4.138.0 whoami
+npx --yes wrangler@4.138.0 whoami
 ```
 
 ## Phase 4 - deploy the stateful recognition Worker
