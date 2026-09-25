@@ -42,9 +42,9 @@ test('gateway exposes a no-secret health endpoint',async()=>{
   assert.equal(body.protocol,APP.gatewayProtocol);
 });
 
-test('OpenAI image input is explicitly high detail for handwriting transcription',async()=>{
+test('OpenAI image input is explicitly original detail for handwriting transcription',async()=>{
   const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
-  assert.match(source,/type:'input_image'[^}]*detail:'high'/);
+  assert.match(source,/type:'input_image'[^}]*detail:'original'/);
 });
 
 
@@ -53,4 +53,12 @@ test('Structured Outputs schema requires every declared optional-like field',asy
   assert.match(source,/required:\['text','rank','providerScore'\]/);
   assert.match(source,/required:\['field','text','crop'\]/);
   assert.match(source,/crop:\{anyOf:\[/);
+});
+
+
+test('OpenAI provider output is explicitly bounded',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/max_output_tokens:20000/);
+  assert.match(source,/openai-incomplete-/);
+  assert.match(source,/openai-refusal/);
 });
