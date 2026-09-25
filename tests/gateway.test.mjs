@@ -86,3 +86,25 @@ test('security coordinator alarm prunes ephemeral replay/rate/idempotency state 
   assert.ok(await storage.get('bootstrap-consumed:bootstrap-0001'));
   assert.ok(storage.alarm>now);
 });
+
+
+test('active duplicate recognition is retryable rather than a terminal binding failure',async()=>{
+  const f=await fixture();assert.equal((await registerViaWorker(f)).status,200);
+  const image=te.encode('derived-image-bytes-long-enough-for-gateway-active-duplicate'),derivedHash=await sha256Hex(image),idem='7'.repeat(64),meta=metadata({requestId:'request-active-0001',derivedSha:derivedHash,idem});
+  const binding={requestId:meta.requestId,gameId:meta.gameId,pageId:meta.pageId,sourceSha256:meta.sourceSha256,derivedSha256:meta.derivedAsset.sha256,runSequence:meta.runSequence,runKind:meta.runKind,supersedesRequestId:meta.supersedesRequestId};
+  const bindingHash=await sha256Hex(te.encode(stableStringify(binding)));
+  await f.storage.put(`idem:${f.deviceId}:${idem}`,{state:'PROCESSING',bindingHash,reservationId:'reservation-active-0001',startedAt:Date.now()});
+  const body=packRecognitionRequest(meta,image),headers=await signedHeaders({privateKey:f.device.pair.privateKey,deviceId:f.deviceId,body,idempotencyKey:idem});
+  const res=await worker.fetch(new Request('https://gateway.example/recognize',{method:'POST',headers,body}),f.env);
+  assert.equal(res.status,503);assert.equal(res.headers.get('retry-after'),'15');assert.equal((await res.json()).error,'request-already-processing');
+});
+
+test('stale processing reservation can be reacquired with the same binding',async()=>{
+  const f=await fixture();assert.equal((await registerViaWorker(f)).status,200);
+  const deviceId=f.deviceId,idem='8'.repeat(64),binding={requestId:'request-stale-0001',gameId:'game-0000000001',pageId:'page-0000000001',sourceSha256:'1'.repeat(64),derivedSha256:'2'.repeat(64),runSequence:1,runKind:'INITIAL',supersedesRequestId:null};
+  const bindingHash=await sha256Hex(te.encode(stableStringify(binding)));
+  await f.storage.put(`idem:${deviceId}:${idem}`,{state:'PROCESSING',bindingHash,reservationId:'old-reservation',startedAt:Date.now()-3*60_000});
+  const bodyHash='a'.repeat(64),timestamp=new Date().toISOString(),nonce='nonce-stale-reacquire',message=stableStringify({bodyHash,deviceId,nonce,timestamp}),signature=bytesToB64(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},f.device.pair.privateKey,te.encode(message)))),descriptor={deviceId,timestamp,nonce,bodyHash,signature};
+  const res=await f.coordinator.fetch(new Request('https://x/authorize',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({descriptor,idempotencyKey:idem,binding,minuteLimit:10,dailyLimit:20})}));
+  assert.equal(res.status,200);const out=await res.json();assert.equal(out.cached,false);assert.notEqual(out.reservationId,'old-reservation');
+});
