@@ -1,0 +1,32 @@
+{
+  "name": "record-recognition-gateway",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RECORD_SECURITY",
+        "class_name": "RecordSecurityCoordinator"
+      }
+    ]
+  },
+  "exports": {
+    "RecordSecurityCoordinator": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+  "vars": {
+    "RECORD_ALLOWED_ORIGIN": "https://record.officeofmethod.com",
+    "RECORD_REGISTRATION_PER_MINUTE": "5",
+    "RECORD_REQUESTS_PER_MINUTE": "10",
+    "RECORD_DAILY_REQUEST_LIMIT": "100",
+    "RECORD_PROVIDER_MODE": "openai-responses",
+    "RECORD_OPENAI_MODEL": "gpt-5.6-terra",
+    "RECORD_PROVIDER_TIMEOUT_MS": "30000"
+  }
+}
