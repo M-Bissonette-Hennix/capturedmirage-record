@@ -1,4 +1,4 @@
-# RECORD 0.3.3 — QA Doctrine
+# RECORD 0.4.0 — QA Doctrine
 
 A green release requires evidence from multiple layers. No single unit-test count is sufficient.
 
@@ -59,9 +59,9 @@ The release harness generates deterministic legal positions and compares RECORD 
 - verifies runtime configuration remains network-first/no-store;
 - refuses unsafe gateway-enabled distribution configuration.
 
-## Browser CI
+## Browser commissioning harness
 
-The GitHub workflow runs Chromium and WebKit functional QA against `dist/`, including actual legacy-DB seeding/migration, fixture recognition, chess entry, certification invalidation/review and offline reopen. This evidence only exists after the workflow actually runs in GitHub.
+`tests/browser/playwright.mjs` remains an optional commissioning harness for Chromium/WebKit legacy migration, fixture recognition, chess entry, certification invalidation/review and offline reopen. The currently commissioned **RECORD Operational Pages** workflow intentionally does not make Playwright a production-deployment dependency after the 0.3.x harness produced repeated false-negative release blocks. Hosted-browser results must therefore be reported separately when that harness is explicitly run; deterministic source/build/dist QA remains the deployment gate.
 
 ## Physical iPhone
 
@@ -81,3 +81,17 @@ Before remote production recognition is described as commissioned, use a version
 - provider cost/game;
 - human review seconds/page;
 - failure behavior under poor connectivity and adversarial document text.
+
+
+## 0.4.0 field/certification regression gates
+
+- fixture provider rejects any source SHA other than the bundled fixture source;
+- capture controls advertise only JPEG/PNG and expose distinct camera and Photos/Files intake paths;
+- new-game date uses local calendar components;
+- explicit certification assertion present;
+- Capsule export UI requires valid certification;
+- native-share-first export path present;
+- Capsule verification trust error code defined;
+- postgame note writes are serialized across input/change/blur events;
+- launcher icons are byte-pinned to deterministic CAPTUREDMIRAGE-logo resizes;
+- operational Pages workflow retains deterministic source/build/dist QA.

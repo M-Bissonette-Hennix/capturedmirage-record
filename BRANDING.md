@@ -4,7 +4,7 @@
 
 **RECORD** is a distinct application inside the CAPTUREDMIRAGE ecosystem. RECORD acquires and certifies physical-game evidence; CAPTUREDMIRAGE performs downstream analysis.
 
-Do not rebrand RECORD as CAPTUREDMIRAGE and do not present the CAPTUREDMIRAGE mark as RECORD's own app icon.
+Do not rebrand RECORD as CAPTUREDMIRAGE. **For the iPhone/Home-Screen launcher icon, 0.4.0 deliberately uses the canonical CAPTUREDMIRAGE mark** so the ingress app is visually grouped with its downstream system. The in-app product name remains RECORD.
 
 ## Canonical CAPTUREDMIRAGE logo
 
@@ -30,3 +30,7 @@ The CAPTUREDMIRAGE interface accent remains `#c6de5b`. The source logo's foregro
 - chessboard dark: `#B58863`;
 - chess pieces: bundled Cburnett SVG set, subject to its third-party license;
 - product presentation: restrained, severe, high-information, non-theatrical.
+
+## Home Screen icon policy — 0.4.0
+
+`apple-touch-icon.png`, standard manifest icons and maskable icons are deterministic raster resizes of the canonical CAPTUREDMIRAGE source logo. They are not redrawn, recolored or regenerated. Safari Add to Home Screen is the canonical iPhone installation path.

@@ -1,5 +1,5 @@
 # RECORD — Development Bible
-## 0.3.3 — RECONSTRUCTION / INTEGRITY
+## 0.4.0 — CERTIFICATION / FIELD OPERATIONS
 
 ## Mission
 
@@ -64,11 +64,11 @@ Existing manually entered prefix plies are preserved. Gaps can only be crossed a
 - **0.1 FOUNDATION** — local evidence/chess/PGN/Capsule substrate.
 - **0.2 VISION / INTEGRITY** — source preprocessing, recognition observations, authenticated transport architecture.
 - **0.3 RECONSTRUCTION / INTEGRITY** — hostile-audit corrective release plus legal sequence beam and reconstruction evidence.
-- **0.4 CERTIFICATION** — deeper source↔move review ergonomics, device/user authenticity layer and correction lineage hardening.
+- **0.4 CERTIFICATION / FIELD OPERATIONS** — fixture fencing, explicit human certification, iPhone-safe capture/correction/export, backup-debt visibility and field recovery ergonomics.
 - **0.5 CAPTUREDMIRAGE BRIDGE** — finalized frictionless handoff built on portable Capsule semantics.
 - **1.0 TOURNAMENT** — physical-iPhone freeze after field corpus, benchmark and failure-recovery commissioning.
 
-## Explicit exclusions from 0.3
+## Explicit exclusions from 0.4
 
 - automatic Stockfish coaching/evaluation;
 - repertoire recommendations;
@@ -80,4 +80,4 @@ Existing manually entered prefix plies are preserved. Gaps can only be crossed a
 
 ## Success metric
 
-The eventual primary product metric is **human attention required to produce a verified game**. In 0.3, reconstruction QA also measures whether the legal beam preserves the historically plausible candidate set without hiding ambiguity.
+The eventual primary product metric is **human attention required to produce a verified game**. In 0.4, field QA additionally measures whether the user can capture, correct, explicitly certify and externally preserve a game with minimal attention while uncertainty remains visible.

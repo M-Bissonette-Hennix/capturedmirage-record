@@ -1,4 +1,4 @@
-# RECORD 0.3.3 — Recognition and Reconstruction Specification
+# RECORD 0.4.0 — Recognition and Reconstruction Specification
 
 ## Authority boundary
 
@@ -30,6 +30,10 @@ The original source remains exact evidence. `record-preprocess/3` produces a sep
 - independent derivative SHA-256.
 
 Only the derivative is sent to a remote provider by default.
+
+### Fixture mode fence
+
+The bundled fixture provider is a deterministic QA instrument, not a fallback recognizer. In 0.4.0 it accepts only the exact SHA-256 of the bundled fixture source page; the UI disables fixture recognition for every other source page. A real scoresheet therefore cannot acquire synthetic fixture observations merely because the installation remains in the default fixture profile.
 
 ## Recognition request v2 transport
 

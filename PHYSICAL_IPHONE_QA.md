@@ -1,10 +1,11 @@
-# RECORD 0.3.3 — Physical iPhone Acceptance Protocol
+# RECORD 0.4.0 — Physical iPhone Acceptance Protocol
 
 Record device model, iOS version, RECORD release/commit, deployment origin and date. Do not mark any item PASS without exercising it on the physical target device.
 
 ## Installation / lifecycle
 
 - Safari page-mode first load;
+- launcher icon displays the canonical CAPTUREDMIRAGE mark;
 - Add to Home Screen;
 - standalone launch;
 - portrait / landscape / safe areas;
@@ -15,9 +16,12 @@ Record device model, iOS version, RECORD release/commit, deployment origin and d
 
 ## Capture / memory
 
+- Home → Quick Capture opens rear-camera intake and persists one page without creating an orphan record on failure;
 - rear-camera permission accepted / denied / recovered;
 - Photos and Files selection;
 - JPEG and PNG intake;
+- picker does not advertise unsupported WebP intake;
+- capture-quality warnings are visible before leaving the paper source;
 - MIME/magic mismatch rejection;
 - invalid/oversize source rejection;
 - multiple pages and reorder/delete/add-after-delete;
@@ -43,6 +47,8 @@ Record device model, iOS version, RECORD release/commit, deployment origin and d
 
 - board/SAN entry, castling, en passant, promotion;
 - board flip and timeline navigation;
+- tap move → explicit EDIT action works without context-menu/long-press;
+- UNDO LAST requires confirmation;
 - earlier-move replacement/downstream contradiction handling;
 - run reconstruction on fixture observation;
 - apply path;
@@ -52,6 +58,8 @@ Record device model, iOS version, RECORD release/commit, deployment origin and d
 
 ## Certification / export
 
+- readiness panel distinguishes source/move/review/canonical gates;
+- certification requires explicit review checkbox;
 - zero-move game cannot certify;
 - `needsReview` cannot certify;
 - metadata/note/move/source changes invalidate certification;
@@ -59,7 +67,9 @@ Record device model, iOS version, RECORD release/commit, deployment origin and d
 - wrong-cell/ply observation cannot certify;
 - Capsule export self-verifies;
 - modified PGN Capsule is rejected;
-- share PGN and Capsule through iOS share sheet/Files fallback.
+- share PGN, Capsule, verified backup and diagnostics through iOS share sheet/Files fallback;
+- cancelling Capsule share does not mark record EXPORTED;
+- Capsule export control remains disabled until certification is VALID.
 
 ## Remote recognition, only after dedicated-origin commissioning
 

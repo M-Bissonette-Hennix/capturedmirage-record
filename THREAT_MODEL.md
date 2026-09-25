@@ -1,4 +1,4 @@
-# Threat Model — RECORD 0.3.3 RECONSTRUCTION / INTEGRITY
+# Threat Model — RECORD 0.4.0 CERTIFICATION / FIELD OPERATIONS
 
 ## Protected assets
 

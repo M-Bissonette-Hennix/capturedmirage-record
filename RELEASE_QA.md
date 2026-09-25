@@ -1,84 +1,93 @@
-# RECORD 0.3.3 — RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY
+# RECORD 0.4.0 — CERTIFICATION / FIELD OPERATIONS
 ## Release QA Receipt
 
-Release date: 2026-09-10
+Release date: 2026-09-25
 
-This receipt records evidence actually produced against the final 0.3.3 source tree and keeps hosted-browser/device/infrastructure claims separate until they are executed against the exact pushed commit.
+This receipt records evidence actually produced against the 0.4.0 source/distribution tree. It deliberately separates local mechanical evidence from physical-device, hosted-browser, dedicated-origin and real-provider commissioning.
 
 ## Inputs
 
-- Immediate predecessor: RECORD 0.3.2 commit `83723cb0178a2c1fab5b021ba2ff4783c68ad332`.
-- Original 0.2 source release: `RECORD-0.2.0-VISION-INTEGRITY(2).zip`.
-- Original 0.2 source release SHA-256: `c77c17c85279d9b17371c488b79b60f264a6231d9793d13bce000cd9b493135c`.
+- Immediate source release: `RECORD-0.3.3-RECONSTRUCTION-INTEGRITY.zip`.
+- Immediate source release SHA-256: `3737f5a342b0fbe39608bb9e34c54ddb62dfd7bbaf39b53d093a28469447630a`.
 - Controlling hostile audit: `RECORD_v0.2.0_hostile_audit.txt`.
 - Controlling hostile-audit SHA-256: `23f31eea522ba68dec312d11580a4c4b91faa0133de38f72ba1fff7ef65f304a`.
 - Canonical CAPTUREDMIRAGE logo SHA-256: `df4f56b3ca47981e0202e433fe275bf15328ca58177599b3ba62a99cd796c8e6`.
+- Working database remains `record-chess` v3; 0.4.0 introduces no IndexedDB schema migration.
 
-## 0.3.2 hosted evidence that controls this correction
+## 0.4.0 corrective focus
 
-GitHub Actions run `34478353081` against exact 0.3.2 commit `83723cb0178a2c1fab5b021ba2ff4783c68ad332` produced:
+0.4.0 treats RECORD as an iPhone field instrument rather than only a reconstruction substrate. The pass specifically hardens:
 
-- Chromium actual `record-foundation` v1 → `record-chess` v3 browser migration: **PASS**.
-- Chromium functional flow reached successful initial certification, then `MARK UNREADABLE`, then the intended failed recertification path.
-- RECORD correctly emitted the user-visible `REC-CERT-006: Record is explicitly marked as needing review.` rejection.
-- RECORD also intentionally logged that domain rejection through `console.error` in the central error reporter.
-- The browser harness then failed because its global diagnostics collector treated that already-expected `console.error` as an unexpected browser error.
-- WebKit was **NOT REACHED** because Chromium's harness assertion terminated the loop first.
+- fixture-mode safety: deterministic fixture recognition is source-hash fenced to the bundled fixture image at both provider and UI boundaries;
+- source intake: separate camera and Photos/Files controls converge on the same JPEG/PNG signature/resource/integrity pipeline;
+- capture review: quality warnings and exact source SHA-256 are surfaced while the paper source is still available;
+- touch correction: explicit earlier-move editing and confirmed destructive undo;
+- certification: visible readiness gates plus a required human review assertion immediately before certification;
+- export state: Capsule export requires a currently valid certification and cancellation cannot falsely mark a record `EXPORTED`;
+- iPhone archival flow: PGN, Capsule, backup and diagnostics prefer native file sharing; cancelled backup export does not advance backup freshness;
+- backup/storage operations: Home/System expose records changed since last backup and storage pressure;
+- civil date correctness: new-game PGN date uses local device calendar components rather than UTC slicing;
+- note persistence: mobile input/change/blur writes are serialized to avoid redundant/racing evidence mutations;
+- PWA operations: waiting service-worker updates surface in the top bar;
+- branding: launcher icons are deterministic raster resizes of the canonical CAPTUREDMIRAGE mark and are byte-pinned by static QA;
+- deployment: the release carries the already commissioned `RECORD Operational Pages` workflow with deterministic source/build/dist gates and no dependency on the previously flaky Playwright deployment blocker.
 
-This is a test-oracle/diagnostic-classification defect. It is not evidence that RECORD allowed recertification or violated the `needsReview` certification barrier.
-
-## 0.3.3 correction
-
-The Playwright harness now:
-
-1. independently waits for the exact `REC-CERT-006` status/toast after the deliberate recertification attempt;
-2. waits a bounded interval for the corresponding browser console event;
-3. consumes exactly one console diagnostic matching `RecordError: Record is explicitly marked as needing review.`;
-4. fails if the expected diagnostic never appears;
-5. retains every unmatched error in the diagnostics buffer;
-6. still calls `diagnostics.assertClean()` before closing each migration/functional browser context;
-7. therefore still fails on any unexpected console error, page error, extra duplicate error, or unrelated failure.
-
-The application certification semantics are unchanged.
-
-The deployment commissioner is additionally corrected so the immutable archived hostile-audit TXT is first SHA-verified against `config/release.json` and is then the **only** path excluded from Git whitespace lint. Its CRLF bytes are preserved rather than silently rewritten for cosmetic Git output.
+The detailed defect/rationale ledger is `IMPROVEMENT_AUDIT_0.4.0.md`.
 
 ## Mechanical source gates
 
-The final 0.3.3 source tree produced:
+Final source-tree QA produced:
 
 - JavaScript syntax: **PASS — 34 / 34 files**;
 - JSON schema self-test: **PASS**;
 - static/security QA: **PASS**;
-- deterministic Node suite: **PASS — 61 / 61 tests**;
+- deterministic Node suite: **PASS — 68 / 68 tests**;
 - allowlisted `dist/` build: **PASS**;
-- content-addressed `dist/` verification: **PASS — 44 / 44 runtime files**;
-- browser-diagnostics regression: **PASS** — expected `REC-CERT-006` console diagnostic must be consumed exactly while unmatched errors remain fatal;
-- deployment commissioner: **PASS** under package-verification mode;
-- independent Stockfish differential: **PASS — depth 1 200 / 200; depth 2 30 / 30; seed `0x5eed1234`**.
+- content-addressed distribution verification: **PASS — 44 / 44 runtime files**;
+- canonical CAPTUREDMIRAGE source-logo hash pin: **PASS**;
+- five launcher-icon byte-hash pins: **PASS**;
+- operational GitHub Pages workflow full-SHA action pinning: **PASS**;
+- default runtime posture: **PASS — remote gateway disabled / fixture profile**.
 
-- release-manifest descriptor verification: **PASS — 150 / 150 files**.
+The deterministic suite includes the 0.2/0.3 hostile-integrity regressions plus 0.4 regressions for fixture source fencing, local civil-date creation, explicit certification UX, valid-certification-only Capsule export, cancelled-share state handling, separate camera/Photos-Files intake, serialized note writes and operational Pages QA preservation.
 
-Clean-extraction verification and the canonical ZIP SHA-256 are produced during final sealing and must match the distributed artifacts.
+## Independent chess oracle differential
 
-## External commissioning boundary
+Using the supplied Stockfish AVX2 binary and deterministic seed `0x5eed1234`:
 
-The following remain **PENDING EXTERNAL** until executed against the exact 0.3.3 commit:
+- perft depth 1: **PASS — 200 / 200 exact**;
+- perft depth 2: **PASS — 30 / 30 exact**.
 
-1. GitHub-hosted Chromium full workflow.
-2. GitHub-hosted WebKit full workflow.
-3. GitHub Pages deployment and public-runtime verification.
-4. Physical iPhone Safari + Add to Home Screen matrix.
-5. Physical iPhone camera/Photos/Files permission paths.
-6. Physical iPhone process-kill/reboot/IndexedDB/offline recovery.
-7. Physical iPhone share-sheet and VoiceOver acceptance.
-8. Physical iPhone large-image/archive memory stress.
-9. Dedicated HTTPS origin cutover/restore verification.
-10. Deployed atomic gateway race/replay/budget/key-rotation commissioning.
-11. Real provider handwritten-score-sheet accuracy/latency/cost/privacy/hostile-document benchmark.
+This is independent evidence for legal move generation, not a proof of every reachable chess state.
+
+## Distribution / drop-in gates
+
+Before final delivery, the release process must additionally establish and preserve in the distributed receipt/artifacts:
+
+- generated release-manifest descriptor verification: **PASS — 152 / 152 descriptors**;
+- deterministic full-release ZIP generation + SHA-256 sidecar: **PASS**;
+- clean-extraction rerun of source/build/dist/release verification: **PASS**;
+- drop-in overlay equivalence: applying the drop-in files over the 0.3.3 source tree yields the exact 0.4.0 tree for every changed/new path, with no unaccounted deletion requirement: **PASS**.
+
+The canonical archive SHA-256 values are emitted in external `.sha256` sidecars so the archive does not attempt to contain a self-referential hash of itself.
+
+## Browser/device/infrastructure boundary
+
+The following are **not converted into fabricated PASS claims** by local tests:
+
+1. Optional exact-0.4.0 Chromium/WebKit Playwright commissioning if browser-engine evidence is desired beyond deterministic release QA.
+2. Physical iPhone camera and Photos/Files permission/intake matrix against the exact 0.4.0 deployment.
+3. Physical iPhone force-kill/reboot/IndexedDB/offline recovery against 0.4.0.
+4. Physical iPhone share-sheet, Files, VoiceOver and Dynamic Type acceptance against 0.4.0.
+5. Physical iPhone large-image/archive memory stress at release ceilings.
+6. Dedicated HTTPS origin cutover/restore verification.
+7. Deployed atomic gateway race/replay/budget/key-rotation commissioning.
+8. Real provider handwritten-score-sheet accuracy/latency/cost/privacy/hostile-document benchmark.
+
+The predecessor application has already been exercised successfully as a Safari-installed Home Screen PWA by the operator, but that does not substitute for executing the exact 0.4.0 physical-device checklist.
 
 ## Release disposition
 
-**SOURCE / DISTRIBUTION FREEZE: PASS SUBJECT TO EXACT 0.3.3 HOSTED-BROWSER AND DEVICE COMMISSIONING.**
+**SOURCE / DISTRIBUTION FREEZE: PASS — MECHANICALLY VERIFIED FIELD-OPERATIONS RELEASE.**
 
-0.3.3 must not be described as WebKit-commissioned, physically iPhone-commissioned, real-provider-commissioned, or tournament-frozen until those gates actually pass.
+The complete source/distribution and drop-in overlay are mechanically verified, including clean extraction and exact overlay equivalence. 0.4.0 must not be described as tournament-frozen, dedicated-origin commissioned, or real-handwriting-recognition commissioned until the corresponding external gates actually pass.

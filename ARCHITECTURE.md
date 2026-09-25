@@ -1,4 +1,4 @@
-# RECORD 0.3.3 — Architecture
+# RECORD 0.4.0 — Architecture
 
 ## 1. Product boundary
 
@@ -181,3 +181,17 @@ The build emits an allowlisted `dist/` and generates a content-addressed `precac
 ## 10. Deployment origin
 
 Remote recognition is blocked on shared `*.github.io` project origins. A commissioned remote deployment requires its own HTTPS origin so browser storage and gateway CORS/trust can be isolated at the origin boundary.
+
+
+## 11. Field-operations layer
+
+0.4.0 adds field ergonomics without changing evidentiary authority:
+
+- Quick Capture can create a record and persist the first page in one flow.
+- SCAN provides distinct camera and Photos/Files intake controls; both converge on the same source validation/preprocessing path.
+- Fixture recognition is source-hash fenced and cannot run on arbitrary real evidence.
+- Certification exposes readiness gates and requires an explicit user assertion immediately before canonical certification is committed.
+- PGN, Capsule, backup and diagnostics prefer native file sharing on iPhone; cancelled export does not create a false exported/backup state.
+- Backup debt, storage pressure and waiting service-worker updates are surfaced before they become silent operational hazards.
+
+These are workflow controls, not new truth authorities. The canonical source, move ledger, evidence bindings and certification model remain unchanged.

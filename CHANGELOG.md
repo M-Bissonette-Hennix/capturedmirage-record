@@ -1,5 +1,44 @@
 # CHANGELOG
 
+## 0.4.0 — CERTIFICATION / FIELD OPERATIONS — 2026-09-25
+
+### Field capture
+- Added **Quick Capture Scoresheet** on the Home screen: one camera action creates the record, preserves the source and opens capture review.
+- Fixed the intake-control mismatch: the UI now advertises only JPEG/PNG, matching the evidentiary MIME policy.
+- Surface capture-quality warnings directly on each source page and inside the source viewer.
+- Added one-tap source SHA-256 copy for field verification and support workflows.
+- New records use the device's local calendar date rather than slicing the UTC timestamp.
+
+### Recognition safety
+- Fixture recognition is now **source-hash fenced** to the bundled deterministic fixture image.
+- Real scoresheets cannot receive fixture observations, including through resumed queued jobs.
+- Fixture mode is visibly labeled and demoted in the capture UI; real pages show `FIXTURE LOCKED`.
+- Added `REC-VIS-009` for attempted fixture use against real evidence.
+
+### Certification hardening
+- Added an explicit certification-readiness panel with source, move-ledger, review-flag and canonical-hash gates.
+- Certification now requires an explicit human review assertion in a confirmation sheet.
+- Capsule export is disabled unless certification is currently valid.
+- A cancelled share-sheet Capsule export no longer marks the record as exported.
+- Added a defined `REC-CAPS-001` code for Capsule-verification trust failures.
+- Result/player metadata gaps are surfaced as review warnings without silently becoming hard blockers.
+
+### iPhone / PWA operations
+- Verified backups, Capsules, PGNs and diagnostics now prefer the native iOS share sheet / Files path.
+- Backup freshness is surfaced on Home; changed records since the last backup are counted.
+- Persistent-storage state and storage pressure are surfaced more prominently.
+- Waiting service-worker updates are visible in the top bar.
+- Move correction no longer depends on long-press/context-menu behavior: tap a move, then use the explicit **EDIT** action.
+- Undoing the last move now requires confirmation.
+- Library adds local search.
+- Home Screen and manifest icons now use exact resized derivatives of the canonical CAPTUREDMIRAGE raster mark.
+
+### Deployment discipline
+- Preserves the working **RECORD Operational Pages** workflow: deterministic source QA → build → dist QA → secret tripwire → Pages artifact → deploy.
+- Hosted Playwright remains available for manual/non-gating commissioning, but is not allowed to hold ordinary Pages deployment hostage after prior test-oracle false negatives.
+- Stale release-specific deployment commissioners are retired in favor of the stable GitHub workflow and documented drop-in update path.
+
+
 ## 0.3.3 — BROWSER DIAGNOSTIC CONSISTENCY — 2026-09-10
 
 ### Hosted-browser commissioning correction

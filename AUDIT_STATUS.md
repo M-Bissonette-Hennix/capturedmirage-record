@@ -1,6 +1,6 @@
-# RECORD 0.3.3 — Hostile Audit Remediation Status
+# RECORD 0.4.0 — Hostile Audit Remediation Status
 
-This ledger maps the attached 0.2.0 hostile forensic audit into the 0.3.3 implementation. It distinguishes **implemented/mechanically testable** controls from **external commissioning evidence** that cannot truthfully be produced inside an offline release build.
+This ledger maps the attached 0.2.0 hostile forensic audit into the 0.4.0 implementation. It distinguishes **implemented/mechanically testable** controls from **external commissioning evidence** that cannot truthfully be produced inside an offline release build.
 
 ## P0 corrective findings closed in source
 
@@ -37,6 +37,22 @@ This ledger maps the attached 0.2.0 hostile forensic audit into the 0.3.3 implem
 - Existing manually entered prefix plies are preserved rather than rewritten.
 - Reconstruction runs are immutable evidence objects bound to source/record revisions and observation request IDs.
 
+
+## 0.4 field/certification hardening
+
+- Fixture recognition is source-hash fenced to the bundled fixture image at both UI and provider boundaries.
+- Review exposes machine-verifiable readiness separately from the user's historical assertion; certification requires an explicit human confirmation checkbox.
+- Capsule export is disabled until certification re-verifies as `VALID`.
+- Cancelled native-share Capsule/backup operations do not falsely advance `EXPORTED` or backup-freshness state.
+- iPhone export paths prefer the native share sheet for PGN, Capsule, backup and diagnostics.
+- SCAN separates live camera capture from Photos/Files import while routing both through the same source-integrity pipeline.
+- Capture-quality warnings are surfaced while the paper source is still available for recapture.
+- Earlier-move correction has an explicit touch-safe action; destructive undo requires confirmation.
+- New records use the device-local civil date rather than UTC slicing.
+- Postgame note mutations are serialized to avoid redundant/racing mobile blur/change writes.
+- Home/System surface backup debt and browser-storage pressure.
+- Launcher assets are deterministic CAPTUREDMIRAGE-logo resizes and are hash-pinned by static QA.
+
 ## Controls intentionally fail-closed by default
 
 - Remote recognition is disabled on shared `*.github.io` project origins.
@@ -48,8 +64,8 @@ This ledger maps the attached 0.2.0 hostile forensic audit into the 0.3.3 implem
 
 These are **not** code-complete claims and must remain pending until actually commissioned:
 
-1. GitHub-hosted Chromium/WebKit workflow run on the target repository.
-2. Physical iPhone acceptance matrix in `PHYSICAL_IPHONE_QA.md`.
+1. Optional hosted Chromium/WebKit commissioning harness against the exact 0.4.0 build if browser-engine evidence is desired beyond deterministic QA.
+2. Physical iPhone acceptance matrix in `PHYSICAL_IPHONE_QA.md` against the 0.4.0 deployment.
 3. Dedicated-origin cutover and restoration verification if moving from `username.github.io` to a custom origin.
 4. Deployed Durable Object gateway race/replay/budget/rotation tests.
 5. Real provider handwriting benchmark: page/cell localization, top-1/top-3 token performance, metadata accuracy, latency, cost, retention/privacy behavior and hostile-document prompt-injection corpus.

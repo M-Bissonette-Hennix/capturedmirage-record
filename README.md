@@ -1,15 +1,15 @@
-# RECORD 0.3.3 — RECONSTRUCTION / INTEGRITY
+# RECORD 0.4.0 — CERTIFICATION / FIELD OPERATIONS
 
-RECORD converts imperfect physical chess evidence into a trustworthy digital game record with the least possible human effort **without concealing uncertainty**.
+RECORD is the phone-side evidentiary ingress layer for physical OTB chess. 0.4.0 shifts emphasis from proving the reconstruction substrate to **field capture, explicit human certification and iPhone-safe archival operations** while preserving the 0.3 integrity architecture.
 
 > **Vision proposes. Chess logic constrains. The user certifies. CAPTUREDMIRAGE analyzes.**
 
-0.3.3 preserves the 0.3 reconstruction/integrity architecture and the 0.3.2 cross-browser IndexedDB-seeding correction, while repairing the hosted browser test oracle discovered by the exact 0.3.2 GitHub run: the deliberate `REC-CERT-006` recertification rejection is now consumed as one expected domain-level console diagnostic after the UI rejection is independently observed. Unexpected browser/page errors still fail closed. The audit of 0.2.0 remains preserved verbatim at `audits/RECORD_v0.2.0_hostile_audit.txt`.
+The 0.4 release is intentionally conservative about authority: fixture recognition is now source-hash fenced to the bundled test image, certification requires an explicit review assertion, and a valid certification is required before Capsule export. Backup/export paths are optimized for the iOS share sheet and Files.
 
 ## Release identity
 
 - Product: **RECORD**
-- Release: **0.3.3 — RECONSTRUCTION / INTEGRITY — BROWSER DIAGNOSTIC CONSISTENCY**
+- Release: **0.4.0 — CERTIFICATION / FIELD OPERATIONS**
 - Working database: `record-chess`, schema version 3
 - Legacy database recognized for migration: `record-foundation`, schema version 1
 - Recognition preprocessing: `record-preprocess/3`
@@ -81,24 +81,17 @@ The repository ships with remote recognition disabled:
 
 This is deliberate. A normal GitHub project Pages URL shares its browser origin with other repositories under the same `USERNAME.github.io` host. RECORD therefore refuses commissioned remote recognition on a shared GitHub Pages origin.
 
-Capture, manual chess entry, fixture recognition, reconstruction, backup/restore, certification and Capsule export remain usable there. Before remote recognition is enabled, move RECORD to a dedicated HTTPS origin, commission the gateway, pin its public P-256 JWK in `config/runtime.json`, and rebuild.
+Capture, manual chess entry, reconstruction, backup/restore, certification and Capsule export remain usable there. Fixture recognition is test-only and is fenced to the bundled fixture source. Before remote recognition is enabled, move RECORD to a dedicated HTTPS origin, commission the gateway, pin its public P-256 JWK in `config/runtime.json`, and rebuild.
 
 ## GitHub Pages deployment
 
-For the canonical Windows deployment path used by this release:
+The repository's operational Pages workflow is intentionally simple and already proven in production:
 
-1. Extract the release ZIP into a normal local directory.
-2. From the extracted release directory run:
+`npm ci` → `npm run check` → `npm run build` → `npm run check:dist` → secret tripwire → Pages artifact → deploy.
 
-```powershell
-node .\tools\deploy-github.mjs
-```
+Only `dist/` is published. Browser/Playwright commissioning remains available as a manual diagnostic tool but is not a deployment gate because prior hosted-browser harness false negatives repeatedly blocked otherwise valid operational builds.
 
-The commissioner first verifies every `RELEASE_MANIFEST.json` descriptor, confirms the existing local/GitHub predecessor commit exactly, replaces only the working tree while preserving `.git`, runs all local source/build/distribution gates, commits and pushes 0.3.3, identifies the exact push-triggered Actions run through the GitHub REST API, waits for hosted Chromium/WebKit QA and Pages deployment, then verifies the public runtime and fail-closed recognition configuration.
-
-The commissioner is deliberately implemented in Node rather than a large PowerShell wrapper; Git and GitHub CLI arguments are passed as discrete process arguments rather than interpolated shell strings.
-
-The workflow performs source QA, deterministic tests, allowlisted `dist/` build, content-addressed distribution verification, Chromium/WebKit functional QA, and a secret tripwire before Pages artifact upload. Only `dist/` is deployed.
+For updates to the existing working repository, use `DROP_IN_INSTALL.md`.
 
 ## Local verification
 
@@ -121,7 +114,7 @@ Release artifacts also include `RELEASE_MANIFEST.json` and `RELEASE_QA.md`.
 
 ## Important assurance boundary
 
-0.3.3 can be mechanically verified in this source package, but no source package can honestly manufacture evidence for tests requiring infrastructure not present in the build environment. The following remain commissioning gates until actually executed on the target deployment:
+0.4.0 can be mechanically verified in this source package, but no source package can honestly manufacture evidence for tests requiring infrastructure not present in the build environment. The following remain commissioning gates until actually executed on the target deployment:
 
 - GitHub-hosted Chromium/WebKit workflow run;
 - physical iPhone Safari/Home-Screen/camera/storage/share/VoiceOver matrix;
