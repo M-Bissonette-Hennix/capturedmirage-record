@@ -72,3 +72,32 @@ These are **not** code-complete claims and must remain pending until actually co
 6. Physical iPhone memory stress for the release's archive/image ceilings.
 
 No release receipt may convert these into PASS without actual evidence.
+
+
+## Remote-recognition commissioning scaffold
+
+Implemented/mechanically testable on the commissioning branch:
+
+- dedicated-production runtime is isolated from the fail-closed GitHub Pages/default runtime;
+- the dedicated build cryptographically imports the pinned P-256 gateway public JWK before emitting `dist/`;
+- Cloudflare Worker configuration exports the SQLite-backed `RecordSecurityCoordinator`;
+- one-version secret deployment keeps OpenAI/private-signing/bootstrap material outside Git;
+- provider input is the bounded recognition derivative at original image detail, never the canonical source file;
+- OpenAI adapter uses `store:false`, bounded low reasoning, bounded output and strict observation-only Structured Outputs;
+- uncalibrated provider confidence is suppressed (`providerScore=null`);
+- active duplicate requests are surfaced as retryable while stale in-flight idempotency reservations can be reacquired;
+- alarm cleanup bounds nonce/rate/daily/idempotency storage growth without deleting registered device or consumed-bootstrap state;
+- public gateway health, exact-origin CORS and foreign-origin rejection have a dedicated live verifier;
+- Vercel recognition rewrites explicitly disable response caching.
+
+Still **PENDING EXTERNAL**:
+
+- creation/deployment of the Cloudflare Worker account instance;
+- installation of the project-scoped OpenAI API key;
+- generation of the production gateway public key/runtime file;
+- deployment/TLS of `record.officeofmethod.com`;
+- deployment/TLS of `recognition.record.officeofmethod.com`;
+- live CORS/auth/replay/idempotency/rate-limit tests;
+- physical iPhone registration and real scoresheet benchmark.
+
+None of those external items may be marked PASS from source inspection alone.

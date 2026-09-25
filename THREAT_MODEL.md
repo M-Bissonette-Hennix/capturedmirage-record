@@ -57,3 +57,15 @@ Controls: legal beam uses transcription evidence and chess legality only; no eng
 - browser memory behavior requires physical-iPhone commissioning;
 - real provider reliability/privacy cannot be established by fixture tests;
 - Cburnett piece artwork has its own GPLv2+ licensing obligations and should be reviewed before commercial distribution strategy is finalized.
+
+### Public recognition proxy / upstream confusion
+
+The friendly gateway hostname is intentionally a Vercel external rewrite rather than the security authority itself. The Cloudflare Worker remains authoritative for exact-origin CORS, device authentication, body/derivative digests, replay, budgets, idempotency and response signing.
+
+Controls:
+
+- browser runtime pins `https://recognition.record.officeofmethod.com/api` plus the gateway public P-256 key;
+- Vercel proxy carries no provider credential or signing private key;
+- recognition proxy responses are configured `no-store` and rewrite caching is explicitly disabled;
+- Worker response signatures prevent a proxy/origin-routing error from silently becoming trusted recognition evidence;
+- live commissioning verifies exact-origin CORS and foreign-origin rejection through the public hostname, not merely against the upstream Worker URL.

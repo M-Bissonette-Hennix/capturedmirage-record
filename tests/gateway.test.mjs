@@ -8,7 +8,7 @@ import {sha256Hex,stableStringify,bytesToB64,signEnvelope,verifyRequestSignature
 import {packRecognitionRequest} from '../src/recognition.js';
 import {APP} from '../src/config.js';
 const te=new TextEncoder();
-class MemoryStorage{constructor(){this.map=new Map();}async get(k){return this.map.get(k)??null;}async put(k,v){this.map.set(k,structuredClone(v));}async delete(k){this.map.delete(k);}async transaction(fn){return fn(this);}}
+class MemoryStorage{constructor(){this.map=new Map();this.alarm=null;}async get(k){return this.map.get(k)??null;}async put(k,v){this.map.set(k,structuredClone(v));}async delete(k){this.map.delete(k);}async list(){return new Map(this.map);}async getAlarm(){return this.alarm;}async setAlarm(v){this.alarm=v;}async transaction(fn){return fn(this);}}
 class SecurityBinding{constructor(coordinator){this.coordinator=coordinator;}idFromName(name){return name;}get(){return {fetch:req=>this.coordinator.fetch(req)};}}
 async function keyPair(){const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);return {pair,pub:await crypto.subtle.exportKey('jwk',pair.publicKey),priv:await crypto.subtle.exportKey('jwk',pair.privateKey)};}
 async function signedHeaders({privateKey,deviceId,body,idempotencyKey,nonce=`nonce-${crypto.randomUUID()}`}){const timestamp=new Date().toISOString(),bodyHash=await sha256Hex(body),message=stableStringify({bodyHash,deviceId,nonce,timestamp}),sig=bytesToB64(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},privateKey,te.encode(message))));return {'content-type':'application/octet-stream','origin':'https://record.example.test','x-record-device':deviceId,'x-record-timestamp':timestamp,'x-record-nonce':nonce,'x-record-body-sha256':bodyHash,'x-record-signature':sig,'x-record-idempotency-key':idempotencyKey};}
@@ -30,4 +30,94 @@ test('OpenAI Responses adapter is explicitly stateless at API storage boundary',
   assert.match(source,/store:false/);
   assert.match(source,/type:'json_schema'/);
   assert.match(source,/input_image/);
+});
+
+
+test('gateway exposes a no-secret health endpoint',async()=>{
+  const res=await worker.fetch(new Request('https://gateway.example/healthz',{method:'GET'}),{});
+  assert.equal(res.status,200);
+  const body=await res.json();
+  assert.equal(body.ok,true);
+  assert.equal(body.service,'record-recognition-gateway');
+  assert.equal(body.protocol,APP.gatewayProtocol);
+});
+
+test('OpenAI image input is explicitly original detail for handwriting transcription',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/type:'input_image'/);assert.match(source,/detail:'original'/);
+});
+
+
+test('Structured Outputs schema requires every declared optional-like field',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/required:\['text','rank','providerScore'\]/);
+  assert.match(source,/required:\['field','text','crop'\]/);
+  assert.match(source,/crop:\{anyOf:\[/);
+});
+
+
+test('OpenAI provider output is explicitly bounded',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/max_output_tokens:20000/);
+  assert.match(source,/openai-incomplete-/);
+  assert.match(source,/openai-refusal/);
+});
+
+
+test('security coordinator alarm prunes ephemeral replay/rate/idempotency state but preserves devices and consumed bootstrap',async()=>{
+  const storage=new MemoryStorage(),coordinator=new RecordSecurityCoordinator({storage},{}),now=Date.now();
+  await storage.put('device:device-00000001',{publicJwk:{kty:'EC'}});
+  await storage.put('bootstrap-consumed:bootstrap-0001',{deviceId:'device-00000001',consumedAt:new Date(now-30*24*60*60_000).toISOString()});
+  await storage.put('nonce:device-00000001:nonce-old',{seenAt:now-60*60_000});
+  await storage.put('nonce:device-00000001:nonce-fresh',{seenAt:now});
+  await storage.put('burst:device-00000001:'+Math.floor((now-60*60_000)/60_000),1);
+  await storage.put('register-rate:192.0.2.1:'+Math.floor((now-60*60_000)/60_000),1);
+  const oldDay=new Date(now-10*24*60*60_000).toISOString().slice(0,10);
+  await storage.put('daily:device-00000001:'+oldDay,1);
+  await storage.put('idem:device-00000001:'+'a'.repeat(64),{state:'COMPLETE',completedAt:now-8*24*60*60_000});
+  await storage.put('idem:device-00000001:'+'b'.repeat(64),{state:'COMPLETE',completedAt:now});
+  await coordinator.alarm();
+  assert.equal(await storage.get('nonce:device-00000001:nonce-old'),null);
+  assert.ok(await storage.get('nonce:device-00000001:nonce-fresh'));
+  assert.equal(await storage.get('daily:device-00000001:'+oldDay),null);
+  assert.equal(await storage.get('idem:device-00000001:'+'a'.repeat(64)),null);
+  assert.ok(await storage.get('idem:device-00000001:'+'b'.repeat(64)));
+  assert.ok(await storage.get('device:device-00000001'));
+  assert.ok(await storage.get('bootstrap-consumed:bootstrap-0001'));
+  assert.ok(storage.alarm>now);
+});
+
+
+test('active duplicate recognition is retryable rather than a terminal binding failure',async()=>{
+  const f=await fixture();assert.equal((await registerViaWorker(f)).status,200);
+  const image=te.encode('derived-image-bytes-long-enough-for-gateway-active-duplicate'),derivedHash=await sha256Hex(image),idem='7'.repeat(64),meta=metadata({requestId:'request-active-0001',derivedSha:derivedHash,idem});
+  const binding={requestId:meta.requestId,gameId:meta.gameId,pageId:meta.pageId,sourceSha256:meta.sourceSha256,derivedSha256:meta.derivedAsset.sha256,runSequence:meta.runSequence,runKind:meta.runKind,supersedesRequestId:meta.supersedesRequestId};
+  const bindingHash=await sha256Hex(te.encode(stableStringify(binding)));
+  await f.storage.put(`idem:${f.deviceId}:${idem}`,{state:'PROCESSING',bindingHash,reservationId:'reservation-active-0001',startedAt:Date.now()});
+  const body=packRecognitionRequest(meta,image),headers=await signedHeaders({privateKey:f.device.pair.privateKey,deviceId:f.deviceId,body,idempotencyKey:idem});
+  const res=await worker.fetch(new Request('https://gateway.example/recognize',{method:'POST',headers,body}),f.env);
+  assert.equal(res.status,503);assert.equal(res.headers.get('retry-after'),'15');assert.equal((await res.json()).error,'request-already-processing');
+});
+
+test('stale processing reservation can be reacquired with the same binding',async()=>{
+  const f=await fixture();assert.equal((await registerViaWorker(f)).status,200);
+  const deviceId=f.deviceId,idem='8'.repeat(64),binding={requestId:'request-stale-0001',gameId:'game-0000000001',pageId:'page-0000000001',sourceSha256:'1'.repeat(64),derivedSha256:'2'.repeat(64),runSequence:1,runKind:'INITIAL',supersedesRequestId:null};
+  const bindingHash=await sha256Hex(te.encode(stableStringify(binding)));
+  await f.storage.put(`idem:${deviceId}:${idem}`,{state:'PROCESSING',bindingHash,reservationId:'old-reservation',startedAt:Date.now()-3*60_000});
+  const bodyHash='a'.repeat(64),timestamp=new Date().toISOString(),nonce='nonce-stale-reacquire',message=stableStringify({bodyHash,deviceId,nonce,timestamp}),signature=bytesToB64(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},f.device.pair.privateKey,te.encode(message)))),descriptor={deviceId,timestamp,nonce,bodyHash,signature};
+  const res=await f.coordinator.fetch(new Request('https://x/authorize',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({descriptor,idempotencyKey:idem,binding,minuteLimit:10,dailyLimit:20})}));
+  assert.equal(res.status,200);const out=await res.json();assert.equal(out.cached,false);assert.notEqual(out.reservationId,'old-reservation');
+});
+
+
+test('OpenAI transcription reasoning is explicitly bounded',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/reasoning:\{effort:'low'\}/);
+});
+
+
+test('remote provider schema forbids invented confidence scores',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/providerScore:\{type:'null'\}/);
+  assert.match(source,/Set providerScore=null for every candidate/);
 });

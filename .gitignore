@@ -5,3 +5,6 @@ node_modules/
 .release/
 RECORD-*.zip
 RECORD-*.zip.sha256
+
+# Local recognition commissioning secrets; never commit.
+.record-secrets/
