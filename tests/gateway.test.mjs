@@ -114,3 +114,10 @@ test('OpenAI transcription reasoning is explicitly bounded',async()=>{
   const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
   assert.match(source,/reasoning:\{effort:'low'\}/);
 });
+
+
+test('remote provider schema forbids invented confidence scores',async()=>{
+  const source=await import('node:fs/promises').then(fs=>fs.readFile(new URL('../gateway/providers.mjs',import.meta.url),'utf8'));
+  assert.match(source,/providerScore:\{type:'null'\}/);
+  assert.match(source,/Set providerScore=null for every candidate/);
+});
